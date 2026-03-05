@@ -26,7 +26,7 @@ public class Sensor {
   @Column(nullable = false, length = 200)
   private String location;
 
-  @ManyToMany
+  @ManyToOne
   @JoinColumn(name = "assigned_user_id")
   private User assignedTo;
 

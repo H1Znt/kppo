@@ -21,7 +21,7 @@ public class Alert {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
-  @ManyToMany
+  @ManyToOne
   @JoinColumn(name = "sensor_id", nullable = false)
   private Sensor sensor;
 
