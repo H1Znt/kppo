@@ -1,0 +1,173 @@
+package com.example.demo.service;
+
+import com.example.demo.dto.AlertDTO;
+import com.example.demo.dto.AlertResponseDTO;
+import com.example.demo.model.Alert;
+import com.example.demo.model.Sensor;
+import com.example.demo.model.StatusType;
+import com.example.demo.repository.AlertRepository;
+import com.example.demo.repository.SensorRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Service
+public class AlertService {
+  private static final Logger logger = LoggerFactory.getLogger(AlertService.class);
+
+  @Autowired
+  private AlertRepository alertRepository;
+
+  @Autowired
+  private SensorRepository sensorRepository;
+
+  @Autowired
+  private UserService userService;
+
+  @Transactional
+  public AlertResponseDTO createAlert(AlertDTO alertDTO) {
+    logger.info("Creating new alert for sensor ID: {}", alertDTO.getSensorId());
+
+    Sensor sensor = sensorRepository.findById(alertDTO.getSensorId())
+      .orElseThrow(() -> {
+        logger.error("Sensor not found with ID: {}", alertDTO.getSensorId());
+        return new RuntimeException("Sensor not found");
+      });
+
+    Alert alert = new Alert();
+    alert.setSensor(sensor);
+    alert.setType(alertDTO.getType());
+    alert.setTimestamp(alertDTO.getTimestamp() != null ? alertDTO.getTimestamp() : LocalDateTime.now());
+    alert.setDescription(alertDTO.getDescription());
+    alert.setStatus(StatusType.NEW);
+
+    Alert savedAlert = alertRepository.save(alert);
+    logger.info("Alert created with ID: {}", savedAlert.getId());
+
+    return convertToDTO(savedAlert);
+  }
+  
+  public List<AlertResponseDTO> getAlertsByStatus(StatusType status) {
+    logger.debug("Fetching alerts with status: {}", status);
+    List<Alert> alerts;
+    if (status != null) {
+      alerts = alertRepository.findByStatusOrderByTimestampDesc(status);
+    } else {
+      alerts = alertRepository.findAll();
+    }
+    return alerts.stream()
+      .map(this::convertToDTO)
+      .collect(Collectors.toList());
+  }
+
+  @Transactional
+  public AlertResponseDTO assignAlert(Long alertId, Long userId) {
+    logger.info("Assigning alert ID: {} to user ID: {}", alertId, userId);
+
+    Alert alert = alertRepository.findById(alertId)
+      .orElseThrow(() -> {
+        logger.error("Alert not found with ID: {}", alertId);
+        return new RuntimeException("Alert not found");
+      });
+
+    Sensor sensor = alert.getSensor();
+    // Назначаем пользователя на датчик
+    sensor.setAssignedTo(userService.findById(userId));
+    sensorRepository.save(sensor);
+    logger.info("Alert assigned successfully");
+    return convertToDTO(alert);
+  }
+
+  @Transactional
+  public AlertResponseDTO changeStatus(Long alertId, StatusType newStatus) {
+    logger.info("Changing status of alert ID: {} to {}", alertId, newStatus);
+
+    Alert alert = alertRepository.findById(alertId)
+      .orElseThrow(() -> {
+        logger.error("Alert not found with ID: {}", alertId);
+        return new RuntimeException("Alert not found");
+      });
+
+    alert.setStatus(newStatus);
+    Alert saved = alertRepository.save(alert);
+    logger.info("Status changed successfully for alert ID: {}", alertId);
+    return convertToDTO(saved);
+  }
+
+  public AlertResponseDTO getAlertById(Long id) {
+    logger.debug("Fetching alert with ID: {}", id);
+    Alert alert = alertRepository.findById(id)
+      .orElseThrow(() -> {
+        logger.error("Alert not found with ID: {}", id);
+        return new RuntimeException("Alert not found");
+      });
+    return convertToDTO(alert);
+  }
+
+  @Transactional
+  public AlertResponseDTO updateAlert(Long id, AlertDTO alertDTO) {
+    logger.info("Updating alert ID: {}", id);
+    Alert alert = alertRepository.findById(id)
+      .orElseThrow(() -> {
+        logger.error("Alert not found with ID: {}", id);
+        return new RuntimeException("Alert not found");
+      });
+
+    // Обновляем только изменяемые поля
+    if (alertDTO.getSensorId() != null) {
+      Sensor sensor = sensorRepository.findById(alertDTO.getSensorId())
+        .orElseThrow(() -> {
+          logger.error("Sensor not found with ID: {}", alertDTO.getSensorId());
+          return new RuntimeException("Sensor not found");
+        });
+      alert.setSensor(sensor);
+    }
+    if (alertDTO.getType() != null) {
+      alert.setType(alertDTO.getType());
+    }
+    if (alertDTO.getDescription() != null) {
+      alert.setDescription(alertDTO.getDescription());
+    }
+    if (alertDTO.getTimestamp() != null) {
+      alert.setTimestamp(alertDTO.getTimestamp());
+    }
+    Alert saved = alertRepository.save(alert);
+    logger.info("Alert updated successfully with ID: {}", id);
+    return convertToDTO(saved);
+  }
+
+  @Transactional
+  public void deleteAlert(Long id) {
+    logger.info("Deleting alert ID: {}", id);
+    
+    Alert alert = alertRepository.findById(id)
+      .orElseThrow(() -> {
+        logger.error("Alert not found with ID: {}", id);
+        return new RuntimeException("Alert not found");
+      });
+    alertRepository.delete(alert);
+    logger.info("Alert deleted successfully with ID: {}", id);
+  }
+
+  public AlertResponseDTO convertToDTO(Alert alert) {
+    AlertResponseDTO dto = new AlertResponseDTO();
+    dto.setId(alert.getId());
+    dto.setSensorId(alert.getSensor().getId());
+    dto.setSensorLocation(alert.getSensor().getLocation());
+    dto.setType(alert.getType());
+    dto.setTimestamp(alert.getTimestamp());
+    dto.setDescription(alert.getDescription());
+    dto.setStatus(alert.getStatus());
+    dto.setPhotoUrls(alert.getPhotoUrls());
+    if (alert.getSensor().getAssignedTo() != null) {
+      dto.setAssignedToUsername(alert.getSensor().getAssignedTo().getUsername());
+    }
+    return dto;
+  }
+}
