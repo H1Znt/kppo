@@ -1,5 +1,6 @@
 package com.example.demo.controller;
 
+import com.example.demo.dto.PermissionResponseDTO;
 import com.example.demo.model.Permission;
 import com.example.demo.repository.PermissionRepository;
 import org.slf4j.Logger;
@@ -9,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/permissions")
@@ -20,15 +22,27 @@ public class PermissionController {
   private PermissionRepository permissionRepository;
 
   @GetMapping
-  public ResponseEntity<List<Permission>> getAllPermissions() {
+  public ResponseEntity<List<PermissionResponseDTO>> getAllPermissions() {
     logger.info("Fetching all permissions");
-    return ResponseEntity.ok(permissionRepository.findAll());
+    List<PermissionResponseDTO> permissions = permissionRepository.findAll().stream()
+      .map(this::toPermissionResponseDTO)
+      .collect(Collectors.toList());
+    return ResponseEntity.ok(permissions);
   }
 
   @GetMapping("/{id}")
-  public ResponseEntity<Permission> getPermissionById(@PathVariable Long id) {
+  public ResponseEntity<PermissionResponseDTO> getPermissionById(@PathVariable Long id) {
     logger.info("Fetching permission with ID: {}", id);
-    return ResponseEntity.ok(permissionRepository.findById(id)
-      .orElseThrow(() -> new RuntimeException("Permission not found")));
+    Permission permission = permissionRepository.findById(id)
+      .orElseThrow(() -> new RuntimeException("Permission not found"));
+    return ResponseEntity.ok(toPermissionResponseDTO(permission));
+  }
+
+  private PermissionResponseDTO toPermissionResponseDTO(Permission permission) {
+    return new PermissionResponseDTO(
+      permission.getId(),
+      permission.getPermission(),
+      permission.getOperation()
+    );
   }
 }

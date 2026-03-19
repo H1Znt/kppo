@@ -1,6 +1,7 @@
 package com.example.demo.controller;
 
 import com.example.demo.dto.SensorDTO;
+import com.example.demo.dto.SensorResponseDTO;
 import com.example.demo.model.Sensor;
 import com.example.demo.service.SensorService;
 import jakarta.validation.Valid;
@@ -12,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/sensors")
@@ -23,29 +25,32 @@ public class SensorController {
   private SensorService sensorService;
 
   @PostMapping
-  public ResponseEntity<Sensor> createSensor(@Valid @RequestBody SensorDTO sensorDTO) {
+  public ResponseEntity<SensorResponseDTO> createSensor(@Valid @RequestBody SensorDTO sensorDTO) {
     logger.info("Creating new sensor");
     Sensor sensor = sensorService.createSensor(sensorDTO);
-    return ResponseEntity.status(HttpStatus.CREATED).body(sensor);
+    return ResponseEntity.status(HttpStatus.CREATED).body(toSensorResponseDTO(sensor));
   }
 
   @GetMapping
-  public ResponseEntity<List<Sensor>> getAllSensors() {
+  public ResponseEntity<List<SensorResponseDTO>> getAllSensors() {
     logger.info("Fetching all sensors");
-    return ResponseEntity.ok(sensorService.getAllSensors());
+    List<SensorResponseDTO> sensors = sensorService.getAllSensors().stream()
+      .map(this::toSensorResponseDTO)
+      .collect(Collectors.toList());
+    return ResponseEntity.ok(sensors);
   }
 
   @GetMapping("/{id}")
-  public ResponseEntity<Sensor> getSensorById(@PathVariable Long id) {
+  public ResponseEntity<SensorResponseDTO> getSensorById(@PathVariable Long id) {
     logger.info("Fetching sensor with ID: {}", id);
-    return ResponseEntity.ok(sensorService.getSensorById(id));
+    return ResponseEntity.ok(toSensorResponseDTO(sensorService.getSensorById(id)));
   }
 
   @PutMapping("/{id}")
-  public ResponseEntity<Sensor> updateSensor(@PathVariable Long id, @Valid @RequestBody SensorDTO sensorDTO) {
+  public ResponseEntity<SensorResponseDTO> updateSensor(@PathVariable Long id, @Valid @RequestBody SensorDTO sensorDTO) {
     logger.info("Updating sensor ID: {}", id);
     Sensor sensor = sensorService.updateSensor(id, sensorDTO);
-    return ResponseEntity.ok(sensor);
+    return ResponseEntity.ok(toSensorResponseDTO(sensor));
   }
 
   @DeleteMapping("/{id}")
@@ -53,5 +58,17 @@ public class SensorController {
     logger.info("Deleting sensor ID: {}", id);
     sensorService.deleteSensor(id);
     return ResponseEntity.ok().body("Sensor deleted successfully");
+  }
+
+  private SensorResponseDTO toSensorResponseDTO(Sensor sensor) {
+    Long assignedToId = sensor.getAssignedTo() != null ? sensor.getAssignedTo().getId() : null;
+    String assignedToUsername = sensor.getAssignedTo() != null ? sensor.getAssignedTo().getUsername() : null;
+    return new SensorResponseDTO(
+      sensor.getId(),
+      sensor.getModel(),
+      sensor.getLocation(),
+      assignedToId,
+      assignedToUsername
+    );
   }
 }

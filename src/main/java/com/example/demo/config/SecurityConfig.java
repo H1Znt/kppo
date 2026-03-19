@@ -14,6 +14,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.http.HttpMethod;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -39,8 +40,18 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/auth/**", "/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
                 .requestMatchers("/incidents/**/upload").permitAll() // Thymeleaf форма загрузки
-                .requestMatchers("/api/incidents/**").hasAuthority("alert.read")
-                .requestMatchers("/api/incidents").hasAuthority("alert.write")
+                .requestMatchers(HttpMethod.GET, "/api/users/**").hasAuthority("user.read")
+                .requestMatchers(HttpMethod.PUT, "/api/users/**").hasAuthority("user.write")
+                .requestMatchers(HttpMethod.DELETE, "/api/users/**").hasAuthority("user.write")
+                .requestMatchers(HttpMethod.GET, "/api/sensors/**").hasAuthority("sensor.read")
+                .requestMatchers(HttpMethod.POST, "/api/sensors/**").hasAuthority("sensor.write")
+                .requestMatchers(HttpMethod.PUT, "/api/sensors/**").hasAuthority("sensor.write")
+                .requestMatchers(HttpMethod.DELETE, "/api/sensors/**").hasAuthority("sensor.write")
+                .requestMatchers(HttpMethod.GET, "/api/roles/**", "/api/permissions/**").hasAuthority("user.read")
+                .requestMatchers(HttpMethod.GET, "/api/incidents/**").hasAuthority("alert.read")
+                .requestMatchers(HttpMethod.POST, "/api/incidents/**").hasAuthority("alert.write")
+                .requestMatchers(HttpMethod.PUT, "/api/incidents/**").hasAuthority("alert.write")
+                .requestMatchers(HttpMethod.DELETE, "/api/incidents/**").hasAuthority("alert.delete")
                 .anyRequest().authenticated()
             )
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

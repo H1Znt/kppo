@@ -1,5 +1,6 @@
 package com.example.demo.controller;
 
+import com.example.demo.dto.RoleResponseDTO;
 import com.example.demo.model.Role;
 import com.example.demo.repository.RoleRepository;
 import org.slf4j.Logger;
@@ -9,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/roles")
@@ -20,15 +22,27 @@ public class RoleController {
   private RoleRepository roleRepository;
 
   @GetMapping
-  public ResponseEntity<List<Role>> getAllRoles() {
+  public ResponseEntity<List<RoleResponseDTO>> getAllRoles() {
     logger.info("Fetching all roles");
-    return ResponseEntity.ok(roleRepository.findAll());
+    List<RoleResponseDTO> roles = roleRepository.findAll().stream()
+      .map(this::toRoleResponseDTO)
+      .collect(Collectors.toList());
+    return ResponseEntity.ok(roles);
   }
 
   @GetMapping("/{id}")
-  public ResponseEntity<Role> getRoleById(@PathVariable Long id) {
+  public ResponseEntity<RoleResponseDTO> getRoleById(@PathVariable Long id) {
     logger.info("Fetching role with ID: {}", id);
-    return ResponseEntity.ok(roleRepository.findById(id)
-      .orElseThrow(() -> new RuntimeException("Role not found")));
+    Role role = roleRepository.findById(id)
+      .orElseThrow(() -> new RuntimeException("Role not found"));
+    return ResponseEntity.ok(toRoleResponseDTO(role));
+  }
+
+  private RoleResponseDTO toRoleResponseDTO(Role role) {
+    return new RoleResponseDTO(
+      role.getId(),
+      role.getTitle(),
+      role.getPermissions().stream().map(permission -> permission.getPermission()).collect(Collectors.toSet())
+    );
   }
 }
