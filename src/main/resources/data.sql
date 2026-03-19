@@ -38,3 +38,19 @@ FROM roles r, permissions p
 WHERE r.title = 'VIEWER'
   AND p.operation = 'read'
 ON CONFLICT DO NOTHING;
+
+-- Для генерации bcrypt-хеша в SQL
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
+-- Тестовый администратор: login=admin, password=admin
+INSERT INTO users (username, password, enabled)
+VALUES ('admin', crypt('admin', gen_salt('bf')), true)
+ON CONFLICT (username) DO NOTHING;
+
+-- Назначаем пользователю admin роль ADMIN
+INSERT INTO user_roles (user_id, role_id)
+SELECT u.id, r.id
+FROM users u, roles r
+WHERE u.username = 'admin'
+  AND r.title = 'ADMIN'
+ON CONFLICT DO NOTHING;
