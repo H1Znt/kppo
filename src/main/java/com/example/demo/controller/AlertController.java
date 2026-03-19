@@ -4,6 +4,7 @@ import com.example.demo.dto.AlertDTO;
 import com.example.demo.dto.AlertResponseDTO;
 import com.example.demo.model.StatusType;
 import com.example.demo.service.AlertService;
+import com.example.demo.service.PhotoService;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -23,6 +25,8 @@ public class AlertController {
     @Autowired
     private AlertService alertService;
 
+    @Autowired
+    private PhotoService photoService;
     @PostMapping
     public ResponseEntity<AlertResponseDTO> createIncident(@Valid @RequestBody AlertDTO alertDTO) {
       logger.info("Creating new incident");
@@ -59,12 +63,10 @@ public class AlertController {
     }
 
     @PostMapping("/{id}/photos")
-    public ResponseEntity<?> uploadPhotos(
-            @PathVariable Long id,
-            @RequestParam("files") List<org.springframework.web.multipart.MultipartFile> files) {
+    public ResponseEntity<List<String>> uploadPhotos(@PathVariable Long id, @RequestParam("files") List<MultipartFile> files) {
       logger.info("Uploading photos for incident ID: {}", id);
-      // Реализация загрузки фото
-      return ResponseEntity.ok("Photos uploaded");
+      List<String> photoUrls = photoService.uploadPhotos(id, files);
+      return ResponseEntity.ok(photoUrls);
     }
 
     @PutMapping("/{id}")

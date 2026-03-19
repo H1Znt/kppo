@@ -1,0 +1,69 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <title>Upload Photos - Alert #<span th:text="${alertId}"></span></title>
+    <meta charset="UTF-8" />
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 600px;
+        margin: 50px auto;
+        padding: 20px;
+      }
+      .message {
+        padding: 10px;
+        margin: 10px 0;
+        border-radius: 5px;
+      }
+      .success {
+        background-color: #d4edda;
+        color: #155724;
+      }
+      .error {
+        background-color: #f8d7da;
+        color: #721c24;
+      }
+      form {
+        margin-top: 20px;
+      }
+      input[type="file"] {
+        margin: 10px 0;
+      }
+      button {
+        background-color: #007bff;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+      }
+      button:hover {
+        background-color: #0056b3;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Upload Photos for Alert #<span th:text="${alertId}"></span></h1>
+
+    <div th:if="${message}" class="message success" th:text="${message}"></div>
+    <div th:if="${error}" class="message error" th:text="${error}"></div>
+
+    <form
+      method="POST"
+      enctype="multipart/form-data"
+      th:action="@{/incidents/{id}/upload(id=${alertId})}"
+    >
+      <label for="files">Select photos to upload:</label>
+      <input
+        type="file"
+        id="files"
+        name="files"
+        multiple
+        accept="image/*"
+        required
+      />
+      <br />
+      <button type="submit">Upload Photos</button>
+    </form>
+  </body>
+</html>
