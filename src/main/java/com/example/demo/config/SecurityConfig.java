@@ -39,7 +39,7 @@ public class SecurityConfig {
             )
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/auth/**", "/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
-                .requestMatchers("/incidents/**/upload").permitAll() // Thymeleaf форма загрузки
+                .requestMatchers("/incidents/*/upload").permitAll() // Thymeleaf форма загрузки
                 .requestMatchers(HttpMethod.GET, "/api/users/**").hasAuthority("user.read")
                 .requestMatchers(HttpMethod.PUT, "/api/users/**").hasAuthority("user.write")
                 .requestMatchers(HttpMethod.DELETE, "/api/users/**").hasAuthority("user.write")
