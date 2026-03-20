@@ -24,4 +24,5 @@ public class AlertResponseDTO {
   private StatusType status;
   private List<String> photoUrls;
   private String assignedToUsername; // Имя ответственного
+  private String reportUrl; // URL PDF отчета (если статус RESOLVED)
 }

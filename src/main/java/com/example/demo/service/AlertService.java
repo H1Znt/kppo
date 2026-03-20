@@ -5,9 +5,9 @@ import com.example.demo.dto.AlertResponseDTO;
 import com.example.demo.model.Alert;
 import com.example.demo.model.Sensor;
 import com.example.demo.model.StatusType;
+import org.slf4j.Logger;
 import com.example.demo.repository.AlertRepository;
 import com.example.demo.repository.SensorRepository;
-import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -29,6 +29,9 @@ public class AlertService {
 
   @Autowired
   private UserService userService;
+
+  @Autowired
+  private PDFService pdfService;
 
   @Transactional
   public AlertResponseDTO createAlert(AlertDTO alertDTO) {
@@ -96,6 +99,18 @@ public class AlertService {
 
     alert.setStatus(newStatus);
     Alert saved = alertRepository.save(alert);
+
+    // Автоматически генерируем PDF при закрытии инцидента
+    if (newStatus == StatusType.RESOLVED) {
+      try {
+        String reportUrl = pdfService.generateAlertReport(saved);
+        logger.info("PDF report generated for alert ID: {}, URL: {}", alertId, reportUrl);
+      } catch (Exception e) {
+        logger.error("Failed to generate PDF report for alert ID: {}", alertId, e);
+        // Не прерываем выполнение, если PDF не удалось создать
+      }
+    }
+
     logger.info("Status changed successfully for alert ID: {}", alertId);
     return convertToDTO(saved);
   }
@@ -167,6 +182,10 @@ public class AlertService {
     dto.setPhotoUrls(alert.getPhotoUrls());
     if (alert.getSensor().getAssignedTo() != null) {
       dto.setAssignedToUsername(alert.getSensor().getAssignedTo().getUsername());
+    }
+
+    if (alert.getStatus() == StatusType.RESOLVED) {
+      dto.setReportUrl("/uploads/reports/" + "alert_" + alert.getId() + "_report.pdf");
     }
     return dto;
   }
