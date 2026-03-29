@@ -33,6 +33,9 @@ public class AlertService {
   @Autowired
   private PDFService pdfService;
 
+  @Autowired
+  private TelegramService telegramService;
+
   @Transactional
   public AlertResponseDTO createAlert(AlertDTO alertDTO) {
     logger.info("Creating new alert for sensor ID: {}", alertDTO.getSensorId());
@@ -52,6 +55,12 @@ public class AlertService {
 
     Alert savedAlert = alertRepository.save(alert);
     logger.info("Alert created with ID: {}", savedAlert.getId());
+
+    telegramService.sendAlertNotification(
+      savedAlert.getId(),
+      sensor.getLocation(),
+      alertDTO.getType().name()
+    );
 
     return convertToDTO(savedAlert);
   }
@@ -104,10 +113,12 @@ public class AlertService {
     if (newStatus == StatusType.RESOLVED) {
       try {
         String reportUrl = pdfService.generateAlertReport(saved);
+        saved.setReportUrl(reportUrl);
+        saved = alertRepository.save(saved);
         logger.info("PDF report generated for alert ID: {}, URL: {}", alertId, reportUrl);
       } catch (Exception e) {
         logger.error("Failed to generate PDF report for alert ID: {}", alertId, e);
-        // Не прерываем выполнение, если PDF не удалось создать
+        // Не прерываем выполнение, если PDF не удалось создать — reportUrl в БД не ставим
       }
     }
 
@@ -184,9 +195,7 @@ public class AlertService {
       dto.setAssignedToUsername(alert.getSensor().getAssignedTo().getUsername());
     }
 
-    if (alert.getStatus() == StatusType.RESOLVED) {
-      dto.setReportUrl("/uploads/reports/" + "alert_" + alert.getId() + "_report.pdf");
-    }
+    dto.setReportUrl(alert.getReportUrl());
     return dto;
   }
 }

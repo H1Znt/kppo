@@ -43,4 +43,7 @@ public class Alert {
   @CollectionTable(name = "alert_photos", joinColumns = @JoinColumn(name = "alert_id"))
   @Column(name = "photo_url")
   private List<String> photoUrls = new ArrayList<>();
+
+  @Column(length = 500)
+  private String reportUrl; // после успешной генерации PDF при RESOLVED
 }
