@@ -1,6 +1,6 @@
 package com.example.demo.dto;
 
-import com.example.demo.model.EventType;
+import com.example.demo.validation.ValidEventType;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -18,8 +18,8 @@ public class AlertDTO {
   @NotNull(message = "Sensor ID is required")
   private Long sensorId;
   
-  @NotNull(message = "Event type is required")
-  private EventType type;
+  @ValidEventType(message = "Invalid event type (use ACCIDENT, HARD_BRAKING, BUTTON)")
+  private String type;
   
   private String description;
   

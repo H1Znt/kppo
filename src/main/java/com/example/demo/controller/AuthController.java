@@ -1,6 +1,7 @@
 package com.example.demo.controller;
 
 import com.example.demo.dto.LoginRequestDTO;
+import com.example.demo.dto.RegisterUserDTO;
 import com.example.demo.dto.UserDTO;
 import com.example.demo.model.User;
 import com.example.demo.service.AuthService;
@@ -28,8 +29,12 @@ public class AuthController {
   private UserService userService;
 
   @PostMapping("/register")
-  public ResponseEntity<?> register(@Valid @RequestBody UserDTO userDTO) {
-    logger.info("Registration attempt for username: {}", userDTO.getUsername());
+  public ResponseEntity<?> register(@Valid @RequestBody RegisterUserDTO registerDTO) {
+    logger.info("Registration attempt for username: {}", registerDTO.getUsername());
+    UserDTO userDTO = new UserDTO(
+        registerDTO.getUsername(),
+        registerDTO.getPassword(),
+        registerDTO.getRoleTitles());
     User user = userService.createUser(userDTO);
     logger.info("User registered successfully: {}", user.getUsername());
     return ResponseEntity.status(HttpStatus.CREATED).body("User registered successfully");

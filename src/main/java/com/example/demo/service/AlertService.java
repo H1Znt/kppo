@@ -2,8 +2,10 @@ package com.example.demo.service;
 
 import com.example.demo.dto.AlertDTO;
 import com.example.demo.dto.AlertResponseDTO;
+import com.example.demo.exception.BadRequestException;
 import com.example.demo.exception.ResourceNotFoundException;
 import com.example.demo.model.Alert;
+import com.example.demo.model.EventType;
 import com.example.demo.model.Sensor;
 import com.example.demo.model.StatusType;
 import org.slf4j.Logger;
@@ -41,15 +43,20 @@ public class AlertService {
   public AlertResponseDTO createAlert(AlertDTO alertDTO) {
     logger.info("Creating new alert for sensor ID: {}", alertDTO.getSensorId());
 
+    if (alertDTO.getType() == null || alertDTO.getType().isBlank()) {
+      throw new BadRequestException("Event type is required");
+    }
+
     Sensor sensor = sensorRepository.findById(alertDTO.getSensorId())
       .orElseThrow(() -> {
         logger.error("Sensor not found with ID: {}", alertDTO.getSensorId());
         return new ResourceNotFoundException("Sensor not found");
       });
 
+    EventType eventType = parseEventType(alertDTO.getType());
     Alert alert = new Alert();
     alert.setSensor(sensor);
-    alert.setType(alertDTO.getType());
+    alert.setType(eventType);
     alert.setTimestamp(alertDTO.getTimestamp() != null ? alertDTO.getTimestamp() : LocalDateTime.now());
     alert.setDescription(alertDTO.getDescription());
     alert.setStatus(StatusType.NEW);
@@ -60,7 +67,7 @@ public class AlertService {
     telegramService.sendAlertNotification(
       savedAlert.getId(),
       sensor.getLocation(),
-      alertDTO.getType().name()
+      eventType.name()
     );
 
     return convertToDTO(savedAlert);
@@ -156,7 +163,7 @@ public class AlertService {
       alert.setSensor(sensor);
     }
     if (alertDTO.getType() != null) {
-      alert.setType(alertDTO.getType());
+      alert.setType(parseEventType(alertDTO.getType()));
     }
     if (alertDTO.getDescription() != null) {
       alert.setDescription(alertDTO.getDescription());
@@ -198,5 +205,9 @@ public class AlertService {
 
     dto.setReportUrl(alert.getReportUrl());
     return dto;
+  }
+
+  private static EventType parseEventType(String raw) {
+    return EventType.valueOf(raw.trim().toUpperCase());
   }
 }
