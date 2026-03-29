@@ -2,6 +2,7 @@ package com.example.demo.service;
 
 import com.example.demo.dto.AlertDTO;
 import com.example.demo.dto.AlertResponseDTO;
+import com.example.demo.exception.ResourceNotFoundException;
 import com.example.demo.model.Alert;
 import com.example.demo.model.Sensor;
 import com.example.demo.model.StatusType;
@@ -43,7 +44,7 @@ public class AlertService {
     Sensor sensor = sensorRepository.findById(alertDTO.getSensorId())
       .orElseThrow(() -> {
         logger.error("Sensor not found with ID: {}", alertDTO.getSensorId());
-        return new RuntimeException("Sensor not found");
+        return new ResourceNotFoundException("Sensor not found");
       });
 
     Alert alert = new Alert();
@@ -85,7 +86,7 @@ public class AlertService {
     Alert alert = alertRepository.findById(alertId)
       .orElseThrow(() -> {
         logger.error("Alert not found with ID: {}", alertId);
-        return new RuntimeException("Alert not found");
+        return new ResourceNotFoundException("Alert not found");
       });
 
     Sensor sensor = alert.getSensor();
@@ -103,7 +104,7 @@ public class AlertService {
     Alert alert = alertRepository.findById(alertId)
       .orElseThrow(() -> {
         logger.error("Alert not found with ID: {}", alertId);
-        return new RuntimeException("Alert not found");
+        return new ResourceNotFoundException("Alert not found");
       });
 
     alert.setStatus(newStatus);
@@ -131,7 +132,7 @@ public class AlertService {
     Alert alert = alertRepository.findById(id)
       .orElseThrow(() -> {
         logger.error("Alert not found with ID: {}", id);
-        return new RuntimeException("Alert not found");
+        return new ResourceNotFoundException("Alert not found");
       });
     return convertToDTO(alert);
   }
@@ -142,7 +143,7 @@ public class AlertService {
     Alert alert = alertRepository.findById(id)
       .orElseThrow(() -> {
         logger.error("Alert not found with ID: {}", id);
-        return new RuntimeException("Alert not found");
+        return new ResourceNotFoundException("Alert not found");
       });
 
     // Обновляем только изменяемые поля
@@ -150,7 +151,7 @@ public class AlertService {
       Sensor sensor = sensorRepository.findById(alertDTO.getSensorId())
         .orElseThrow(() -> {
           logger.error("Sensor not found with ID: {}", alertDTO.getSensorId());
-          return new RuntimeException("Sensor not found");
+          return new ResourceNotFoundException("Sensor not found");
         });
       alert.setSensor(sensor);
     }
@@ -175,7 +176,7 @@ public class AlertService {
     Alert alert = alertRepository.findById(id)
       .orElseThrow(() -> {
         logger.error("Alert not found with ID: {}", id);
-        return new RuntimeException("Alert not found");
+        return new ResourceNotFoundException("Alert not found");
       });
     alertRepository.delete(alert);
     logger.info("Alert deleted successfully with ID: {}", id);

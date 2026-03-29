@@ -1,5 +1,6 @@
 package com.example.demo.service;
 
+import com.example.demo.exception.ResourceNotFoundException;
 import com.example.demo.model.Alert;
 import com.example.demo.repository.AlertRepository;
 import org.apache.commons.io.FilenameUtils;
@@ -36,7 +37,7 @@ public class PhotoService {
     Alert alert = alertRepository.findById(alertId)
       .orElseThrow(() -> {
         logger.error("Alert not found with ID: {}", alertId);
-        return new RuntimeException("Alert not found");
+        return new ResourceNotFoundException("Alert not found");
       });
 
     List<String> photoUrls = new ArrayList<>();

@@ -1,6 +1,7 @@
 package com.example.demo.controller;
 
 import com.example.demo.dto.RoleResponseDTO;
+import com.example.demo.exception.ResourceNotFoundException;
 import com.example.demo.model.Role;
 import com.example.demo.repository.RoleRepository;
 import org.slf4j.Logger;
@@ -34,7 +35,7 @@ public class RoleController {
   public ResponseEntity<RoleResponseDTO> getRoleById(@PathVariable Long id) {
     logger.info("Fetching role with ID: {}", id);
     Role role = roleRepository.findById(id)
-      .orElseThrow(() -> new RuntimeException("Role not found"));
+      .orElseThrow(() -> new ResourceNotFoundException("Role not found"));
     return ResponseEntity.ok(toRoleResponseDTO(role));
   }
 

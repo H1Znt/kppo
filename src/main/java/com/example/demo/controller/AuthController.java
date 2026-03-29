@@ -30,36 +30,25 @@ public class AuthController {
   @PostMapping("/register")
   public ResponseEntity<?> register(@Valid @RequestBody UserDTO userDTO) {
     logger.info("Registration attempt for username: {}", userDTO.getUsername());
-    try {
-      User user = userService.createUser(userDTO);
-      logger.info("User registered successfully: {}", user.getUsername());
-      return ResponseEntity.status(HttpStatus.CREATED).body("User registered successfully");
-    } catch (Exception e) {
-      logger.error("Registration failed: {}", e.getMessage());
-      return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
-    }
+    User user = userService.createUser(userDTO);
+    logger.info("User registered successfully: {}", user.getUsername());
+    return ResponseEntity.status(HttpStatus.CREATED).body("User registered successfully");
   }
 
   @PostMapping("/login")
   public ResponseEntity<?> login(@Valid @RequestBody LoginRequestDTO loginRequest,
-                                   HttpServletResponse response) {
+                                 HttpServletResponse response) {
     logger.info("Login attempt for username: {}", loginRequest.getUsername());
-    try {
-      String token = authService.authenticate(loginRequest);
+    String token = authService.authenticate(loginRequest);
 
-      // Устанавливаем JWT в Cookie
-      Cookie cookie = new Cookie("jwtToken", token);
-      cookie.setHttpOnly(true); // Защита от XSS атак
-      cookie.setSecure(false); // true для HTTPS в продакшене
-      cookie.setPath("/");
-      cookie.setMaxAge(86400); // 24 часа в секундах
-      response.addCookie(cookie);
+    Cookie cookie = new Cookie("jwtToken", token);
+    cookie.setHttpOnly(true);
+    cookie.setSecure(false);
+    cookie.setPath("/");
+    cookie.setMaxAge(86400);
+    response.addCookie(cookie);
 
-      logger.info("User logged in successfully: {}", loginRequest.getUsername());
-      return ResponseEntity.ok().body("Login successful");
-    } catch (Exception e) {
-      logger.error("Login failed: {}", e.getMessage());
-      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials");
-    }
+    logger.info("User logged in successfully: {}", loginRequest.getUsername());
+    return ResponseEntity.ok().body("Login successful");
   }
 }

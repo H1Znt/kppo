@@ -1,6 +1,7 @@
 package com.example.demo.service;
 
 import com.example.demo.dto.SensorDTO;
+import com.example.demo.exception.ResourceNotFoundException;
 import com.example.demo.model.Sensor;
 import com.example.demo.model.User;
 import com.example.demo.repository.SensorRepository;
@@ -35,7 +36,7 @@ public class SensorService {
       User user = userRepository.findById(sensorDTO.getAssignedToId())
         .orElseThrow(() -> {
           logger.error("User not found with ID: {}", sensorDTO.getAssignedToId());
-          return new RuntimeException("User not found");
+          return new ResourceNotFoundException("User not found");
         });
       sensor.setAssignedTo(user);
     }
@@ -55,7 +56,7 @@ public class SensorService {
     return sensorRepository.findById(id)
       .orElseThrow(() -> {
         logger.error("Sensor not found with ID: {}", id);
-        return new RuntimeException("Sensor not found");
+        return new ResourceNotFoundException("Sensor not found");
       });
   }
 
@@ -65,7 +66,7 @@ public class SensorService {
     Sensor sensor = sensorRepository.findById(id)
       .orElseThrow(() -> {
         logger.error("Sensor not found with ID: {}", id);
-        return new RuntimeException("Sensor not found");
+        return new ResourceNotFoundException("Sensor not found");
       });
 
     if (sensorDTO.getModel() != null) {
@@ -80,7 +81,7 @@ public class SensorService {
       User user = userRepository.findById(sensorDTO.getAssignedToId())
       .orElseThrow(() -> {
         logger.error("User not found with ID: {}", sensorDTO.getAssignedToId());
-        return new RuntimeException("User not found");
+        return new ResourceNotFoundException("User not found");
       });
       sensor.setAssignedTo(user);
     } else if (sensorDTO.getAssignedToId() == null && sensor.getAssignedTo() != null) {
@@ -100,7 +101,7 @@ public class SensorService {
     Sensor sensor = sensorRepository.findById(id)
       .orElseThrow(() -> {
         logger.error("Sensor not found with ID: {}", id);
-        return new RuntimeException("Sensor not found");
+        return new ResourceNotFoundException("Sensor not found");
       });
     
     // Проверяем, нет ли связанных Alert

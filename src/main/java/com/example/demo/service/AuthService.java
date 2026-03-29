@@ -1,6 +1,7 @@
 package com.example.demo.service;
 
 import com.example.demo.dto.LoginRequestDTO;
+import com.example.demo.exception.UnauthorizedException;
 import com.example.demo.model.User;
 import com.example.demo.repository.UserRepository;
 import com.example.demo.util.JwtUtil;
@@ -30,17 +31,17 @@ public class AuthService {
     User user = userRepository.findByUsername(loginRequest.getUsername())
       .orElseThrow(() -> {
         logger.error("Invalid credentials for username: {}", loginRequest.getUsername());
-        return new RuntimeException("Invalid credentials");
+        return new UnauthorizedException("Invalid credentials");
       });
 
     if (!user.isEnabled()) {
       logger.error("User is disabled: {}", loginRequest.getUsername());
-      throw new RuntimeException("User is disabled");
+      throw new UnauthorizedException("User is disabled");
     }
 
     if (!passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
       logger.error("Invalid password for username: {}", loginRequest.getUsername());
-      throw new RuntimeException("Invalid credentials");
+      throw new UnauthorizedException("Invalid credentials");
     }
 
     String token = jwtUtil.generateToken(user.getUsername());

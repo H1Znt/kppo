@@ -1,6 +1,8 @@
 package com.example.demo.service;
 
 import com.example.demo.dto.UserDTO;
+import com.example.demo.exception.BadRequestException;
+import com.example.demo.exception.ResourceNotFoundException;
 import com.example.demo.model.Role;
 import com.example.demo.model.User;
 import com.example.demo.repository.RoleRepository;
@@ -35,7 +37,7 @@ public class UserService {
 
     if (userRepository.existsByUsername(userDTO.getUsername())) {
       logger.error("Username already exists: {}", userDTO.getUsername());
-      throw new RuntimeException("Username already exists");
+      throw new BadRequestException("Username already exists");
     }
 
     User user = new User();
@@ -48,7 +50,7 @@ public class UserService {
         .map(roleTitle -> roleRepository.findByTitle(roleTitle)
           .orElseThrow(() -> {
             logger.error("Role not found: {}", roleTitle);
-            return new RuntimeException("Role not found: " + roleTitle);
+            return new ResourceNotFoundException("Role not found: " + roleTitle);
           }))
         .collect(Collectors.toSet());
       user.setRoles(roles);
@@ -64,7 +66,7 @@ public class UserService {
     return userRepository.findByUsername(username)
       .orElseThrow(() -> {
         logger.error("User not found: {}", username);
-        return new RuntimeException("User not found");
+        return new ResourceNotFoundException("User not found");
       });
   }
 
@@ -73,7 +75,7 @@ public class UserService {
     return userRepository.findById(id)
       .orElseThrow(() -> {
         logger.error("User not found with ID: {}", id);
-        return new RuntimeException("User not found");
+        return new ResourceNotFoundException("User not found");
       });
   }
 
@@ -88,14 +90,14 @@ public class UserService {
 
     User user = userRepository.findById(id).orElseThrow(() -> {
       logger.error("User not found with ID: {}", id);
-      return new RuntimeException("User not found");
+      return new ResourceNotFoundException("User not found");
     });
 
     // Обновляем username только если он изменился и не занят
     if (userDTO.getUsername() != null && !userDTO.getUsername().equals(user.getUsername())) {
       if (userRepository.existsByUsername(userDTO.getUsername())) {
         logger.error("Username already exists: {}", userDTO.getUsername());
-        throw new RuntimeException("Username already exists");
+        throw new BadRequestException("Username already exists");
       }
       user.setUsername(userDTO.getUsername());
     }
@@ -111,7 +113,7 @@ public class UserService {
         .map(roleTitle -> roleRepository.findByTitle(roleTitle)
           .orElseThrow(() -> {
             logger.error("Role not found: {}", roleTitle);
-            return new RuntimeException("Role not found: " + roleTitle);
+            return new ResourceNotFoundException("Role not found: " + roleTitle);
           }))
         .collect(Collectors.toSet());
       user.setRoles(roles);
@@ -128,7 +130,7 @@ public class UserService {
 
     User user = userRepository.findById(id).orElseThrow(() -> {
       logger.error("User not found with ID: {}", id);
-      return new RuntimeException("User not found");
+      return new ResourceNotFoundException("User not found");
     });
 
     // Деактивируем пользователя
