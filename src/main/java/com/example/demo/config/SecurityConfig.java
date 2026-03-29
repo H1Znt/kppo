@@ -39,9 +39,11 @@ public class SecurityConfig {
             )
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/error").permitAll()
-                .requestMatchers("/api/auth/**", "/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/auth/register", "/api/auth/login").permitAll()
+                .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
                 .requestMatchers("/incidents/*/upload").permitAll() // Thymeleaf форма загрузки
                 .requestMatchers(HttpMethod.GET, "/api/users/**").hasAuthority("user.read")
+                .requestMatchers(HttpMethod.POST, "/api/users/**").hasAuthority("user.write")
                 .requestMatchers(HttpMethod.PUT, "/api/users/**").hasAuthority("user.write")
                 .requestMatchers(HttpMethod.DELETE, "/api/users/**").hasAuthority("user.write")
                 .requestMatchers(HttpMethod.GET, "/api/sensors/**").hasAuthority("sensor.read")
@@ -74,7 +76,10 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:3000", "http://localhost:9000"));
+        configuration.setAllowedOrigins(Arrays.asList(
+            "http://localhost:3000",
+            "http://localhost:5173",
+            "http://localhost:9000"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
         configuration.setAllowCredentials(true);

@@ -1,8 +1,10 @@
 package com.example.demo.service;
 
+import com.example.demo.dto.MeResponseDTO;
 import com.example.demo.dto.UserDTO;
 import com.example.demo.exception.BadRequestException;
 import com.example.demo.exception.ResourceNotFoundException;
+import com.example.demo.model.Permission;
 import com.example.demo.model.Role;
 import com.example.demo.model.User;
 import com.example.demo.repository.RoleRepository;
@@ -34,6 +36,10 @@ public class UserService {
   @Transactional
   public User createUser(UserDTO userDTO) {
     logger.info("Creating user with username: {}", userDTO.getUsername());
+
+    if (userDTO.getPassword() == null || userDTO.getPassword().isBlank()) {
+      throw new BadRequestException("Password is required");
+    }
 
     if (userRepository.existsByUsername(userDTO.getUsername())) {
       logger.error("Username already exists: {}", userDTO.getUsername());
@@ -82,6 +88,26 @@ public class UserService {
   public List<User> getAllUsers() {
     logger.debug("Fetching all users");
     return userRepository.findAll();
+  }
+
+  @Transactional(readOnly = true)
+  public MeResponseDTO getMe(String username) {
+    User user = userRepository.findByUsernameWithRolesAndPermissions(username)
+        .orElseThrow(() -> {
+          logger.error("User not found: {}", username);
+          return new ResourceNotFoundException("User not found");
+        });
+    Set<String> roleTitles = user.getRoles().stream().map(Role::getTitle).collect(Collectors.toSet());
+    Set<String> permissions = user.getRoles().stream()
+        .flatMap(role -> role.getPermissions().stream())
+        .map(Permission::getPermission)
+        .collect(Collectors.toSet());
+    return new MeResponseDTO(
+        user.getId(),
+        user.getUsername(),
+        user.isEnabled(),
+        roleTitles,
+        permissions);
   }
 
   @Transactional

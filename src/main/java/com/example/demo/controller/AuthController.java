@@ -1,6 +1,8 @@
 package com.example.demo.controller;
 
 import com.example.demo.dto.LoginRequestDTO;
+import com.example.demo.dto.LoginResponseDTO;
+import com.example.demo.dto.MeResponseDTO;
 import com.example.demo.dto.RegisterUserDTO;
 import com.example.demo.dto.UserDTO;
 import com.example.demo.model.User;
@@ -14,6 +16,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -41,8 +45,8 @@ public class AuthController {
   }
 
   @PostMapping("/login")
-  public ResponseEntity<?> login(@Valid @RequestBody LoginRequestDTO loginRequest,
-                                 HttpServletResponse response) {
+  public ResponseEntity<LoginResponseDTO> login(@Valid @RequestBody LoginRequestDTO loginRequest,
+                                              HttpServletResponse response) {
     logger.info("Login attempt for username: {}", loginRequest.getUsername());
     String token = authService.authenticate(loginRequest);
 
@@ -54,6 +58,14 @@ public class AuthController {
     response.addCookie(cookie);
 
     logger.info("User logged in successfully: {}", loginRequest.getUsername());
-    return ResponseEntity.ok().body("Login successful");
+    return ResponseEntity.ok(new LoginResponseDTO("Login successful", token));
+  }
+
+  @GetMapping("/me")
+  public ResponseEntity<MeResponseDTO> me(@AuthenticationPrincipal UserDetails principal) {
+    if (principal == null) {
+      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+    }
+    return ResponseEntity.ok(userService.getMe(principal.getUsername()));
   }
 }

@@ -93,17 +93,18 @@ mvnw.cmd spring-boot-run
 - Swagger UI: **http://localhost:9000/swagger-ui.html**  
 - OpenAPI JSON: **http://localhost:9000/v3/api-docs**
 
-Для защищённых методов: сначала `POST /api/auth/login`, затем cookie `jwtToken` подставится автоматически в браузере; в Postman можно передать заголовок `Authorization: Bearer` и значение токена без префикса `jwtToken=`.
+Для защищённых методов: сначала `POST /api/auth/login`, затем cookie `jwtToken` подставится автоматически в браузере при запросах на тот же origin; для SPA с другого порта используйте поле **`token`** из ответа и заголовок **`Authorization: Bearer`** с этим токеном (фильтр читает и cookie, и Bearer). Профиль и права для UI: **`GET /api/auth/me`**.
 
 ## Важные REST-эндпоинты (кратко)
 
 | Метод | Путь | Назначение |
 |--------|------|------------|
 | POST | `/api/auth/register` | Регистрация |
-| POST | `/api/auth/login` | Вход, установка JWT в cookie |
+| POST | `/api/auth/login` | Вход: JWT в cookie `jwtToken` и в JSON `{ "message", "token" }` (удобно для SPA + `Authorization: Bearer`) |
+| GET | `/api/auth/me` | Текущий пользователь: id, username, enabled, roleTitles, **permissions** (требуется JWT) |
 | CRUD | `/api/incidents` | Инциденты (alerts) |
 | CRUD | `/api/sensors` | Датчики |
-| CRUD | `/api/users` | Пользователи |
+| CRUD | `/api/users` | Пользователи (`POST` — только с правом `user.write`, для создания учёток из админки) |
 | GET | `/api/roles`, `/api/permissions` | Справочники |
 | GET | `/incidents/{id}/upload` | Форма загрузки фото (Thymeleaf) |
 
