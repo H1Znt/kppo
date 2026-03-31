@@ -42,6 +42,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.POST, "/api/auth/register", "/api/auth/login").permitAll()
                 .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
                 .requestMatchers("/incidents/*/upload").permitAll() // Thymeleaf форма загрузки
+                .requestMatchers(HttpMethod.GET, "/uploads/**").permitAll() // Статика фото/PDF (img/ссылки без заголовка Authorization)
                 .requestMatchers(HttpMethod.GET, "/api/users/**").hasAuthority("user.read")
                 .requestMatchers(HttpMethod.POST, "/api/users/**").hasAuthority("user.write")
                 .requestMatchers(HttpMethod.PUT, "/api/users/**").hasAuthority("user.write")

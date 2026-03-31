@@ -114,6 +114,7 @@ mvnw.cmd spring-boot-run
 
 - Загрузки: каталог из **`app.upload.dir`** (по умолчанию `uploads`).
 - PDF при переводе инцидента в статус **RESOLVED**: каталог `uploads/reports`, URL сохраняется в поле **`reportUrl`** сущности, если PDF создан успешно.
+- Фото и отчёты отдаются по путям **`/uploads/**`** (`WebConfig`). Для SPA без передачи JWT в `<img>` / прямой ссылке **`GET /uploads/**` разрешён без авторизации**; загрузка по-прежнему только через API с правом **`alert.write`** (`POST /api/incidents/{id}/photos`).
 
 ## Дамп базы для репозитория / отчёта
 
