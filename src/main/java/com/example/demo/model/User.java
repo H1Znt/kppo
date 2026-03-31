@@ -37,6 +37,7 @@ public class User {
   )
   private Set<Role> roles = new HashSet<>();
 
-  @OneToMany(mappedBy = "assignedTo", cascade = CascadeType.ALL)
+  // Без cascade REMOVE: удаление пользователя не должно удалять датчики — только снимается назначение.
+  @OneToMany(mappedBy = "assignedTo")
   private Set<Sensor> assignedSensors = new HashSet<>();
 }

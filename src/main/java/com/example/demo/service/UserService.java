@@ -7,7 +7,9 @@ import com.example.demo.exception.ResourceNotFoundException;
 import com.example.demo.model.Permission;
 import com.example.demo.model.Role;
 import com.example.demo.model.User;
+import com.example.demo.model.Sensor;
 import com.example.demo.repository.RoleRepository;
+import com.example.demo.repository.SensorRepository;
 import com.example.demo.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,6 +28,9 @@ public class UserService {
 
   @Autowired
   private UserRepository userRepository;
+
+  @Autowired
+  private SensorRepository sensorRepository;
 
   @Autowired
   private RoleRepository roleRepository;
@@ -151,18 +156,43 @@ public class UserService {
   }
 
   @Transactional
-  public void deleteUser(Long id) {
-    logger.info("Deleting user ID: {}", id);
+  public User deactivateUser(Long id) {
+    logger.info("Deactivating user ID: {}", id);
+    User user = findById(id);
+    user.setEnabled(false);
+    User saved = userRepository.save(user);
+    logger.info("User deactivated successfully with ID: {}", id);
+    return saved;
+  }
 
+  @Transactional
+  public User activateUser(Long id) {
+    logger.info("Activating user ID: {}", id);
+    User user = findById(id);
+    user.setEnabled(true);
+    User saved = userRepository.save(user);
+    logger.info("User activated successfully with ID: {}", id);
+    return saved;
+  }
+
+  /**
+   * Полное удаление учётной записи: снятие назначений с датчиков, затем удаление строки в БД.
+   */
+  @Transactional
+  public void permanentlyDeleteUser(Long id) {
+    logger.info("Permanently deleting user ID: {}", id);
     User user = userRepository.findById(id).orElseThrow(() -> {
       logger.error("User not found with ID: {}", id);
       return new ResourceNotFoundException("User not found");
     });
 
-    // Деактивируем пользователя
-    user.setEnabled(false);
-    userRepository.save(user);
+    for (Sensor sensor : sensorRepository.findByAssignedToId(id)) {
+      sensor.setAssignedTo(null);
+      sensorRepository.save(sensor);
+    }
 
-    logger.info("User deactivated successfully with ID: {}", id);
+    user.getRoles().clear();
+    userRepository.delete(user);
+    logger.info("User permanently deleted with ID: {}", id);
   }
 }

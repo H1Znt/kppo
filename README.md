@@ -104,7 +104,7 @@ mvnw.cmd spring-boot-run
 | GET | `/api/auth/me` | Текущий пользователь: id, username, enabled, roleTitles, **permissions** (требуется JWT) |
 | CRUD | `/api/incidents` | Инциденты (alerts) |
 | CRUD | `/api/sensors` | Датчики |
-| CRUD | `/api/users` | Пользователи (`POST` — только с правом `user.write`, для создания учёток из админки) |
+| CRUD | `/api/users` | Пользователи (`POST`/`PUT` — `user.write`). **Отключить:** `POST /api/users/{id}/deactivate` · **Включить:** `POST /api/users/{id}/activate` · **Удалить навсегда:** `DELETE /api/users/{id}` (нельзя для своей учётной записи; с датчиков снимается назначение) |
 | GET | `/api/roles`, `/api/permissions` | Справочники |
 | GET | `/incidents/{id}/upload` | Форма загрузки фото (Thymeleaf) |
 

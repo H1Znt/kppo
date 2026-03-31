@@ -2,6 +2,7 @@ package com.example.demo.controller;
 
 import com.example.demo.dto.UserDTO;
 import com.example.demo.dto.UserResponseDTO;
+import com.example.demo.exception.BadRequestException;
 import com.example.demo.model.User;
 import com.example.demo.service.UserService;
 import jakarta.validation.Valid;
@@ -10,6 +11,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -53,11 +56,40 @@ public class UserController {
     return ResponseEntity.ok(toUserResponseDTO(user));
   }
 
+  @PostMapping("/{id}/deactivate")
+  public ResponseEntity<UserResponseDTO> deactivateUser(
+      @PathVariable Long id,
+      @AuthenticationPrincipal UserDetails principal) {
+    if (principal != null) {
+      User current = userService.findByUsername(principal.getUsername());
+      if (current.getId().equals(id)) {
+        throw new BadRequestException("Cannot deactivate your own account");
+      }
+    }
+    logger.info("Deactivating user ID: {}", id);
+    return ResponseEntity.ok(toUserResponseDTO(userService.deactivateUser(id)));
+  }
+
+  @PostMapping("/{id}/activate")
+  public ResponseEntity<UserResponseDTO> activateUser(@PathVariable Long id) {
+    logger.info("Activating user ID: {}", id);
+    return ResponseEntity.ok(toUserResponseDTO(userService.activateUser(id)));
+  }
+
   @DeleteMapping("/{id}")
-  public ResponseEntity<?> deleteUser(@PathVariable Long id) {
-    logger.info("Deleting user ID: {}", id);
-    userService.deleteUser(id);
-    return ResponseEntity.ok().body("User deleted successfully");
+  public ResponseEntity<?> permanentlyDeleteUser(
+      @PathVariable Long id,
+      @AuthenticationPrincipal UserDetails principal) {
+    if (principal == null) {
+      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+    }
+    User current = userService.findByUsername(principal.getUsername());
+    if (current.getId().equals(id)) {
+      throw new BadRequestException("Cannot delete your own account");
+    }
+    logger.info("Permanently deleting user ID: {}", id);
+    userService.permanentlyDeleteUser(id);
+    return ResponseEntity.ok().body("User permanently deleted");
   }
 
   private UserResponseDTO toUserResponseDTO(User user) {
