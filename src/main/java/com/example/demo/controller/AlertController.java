@@ -69,6 +69,21 @@ public class AlertController {
       return ResponseEntity.ok(photoUrls);
     }
 
+    @DeleteMapping("/{id}/photos")
+    public ResponseEntity<AlertResponseDTO> deletePhoto(
+        @PathVariable Long id,
+        @RequestParam("url") String url) {
+      logger.info("Deleting photo for incident ID: {}", id);
+      photoService.deletePhoto(id, url);
+      return ResponseEntity.ok(alertService.getAlertById(id));
+    }
+
+    @DeleteMapping("/{id}/report")
+    public ResponseEntity<AlertResponseDTO> deleteReport(@PathVariable Long id) {
+      logger.info("Deleting PDF report for incident ID: {}", id);
+      return ResponseEntity.ok(alertService.deleteIncidentReport(id));
+    }
+
     @PutMapping("/{id}")
     public ResponseEntity<AlertResponseDTO> updateIncident(
             @PathVariable Long id,

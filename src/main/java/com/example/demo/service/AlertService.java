@@ -37,6 +37,9 @@ public class AlertService {
   private PDFService pdfService;
 
   @Autowired
+  private PhotoService photoService;
+
+  @Autowired
   private TelegramService telegramService;
 
   @Transactional
@@ -179,7 +182,7 @@ public class AlertService {
   @Transactional
   public void deleteAlert(Long id) {
     logger.info("Deleting alert ID: {}", id);
-    
+
     Alert alert = alertRepository.findById(id)
       .orElseThrow(() -> {
         logger.error("Alert not found with ID: {}", id);
@@ -187,6 +190,24 @@ public class AlertService {
       });
     alertRepository.delete(alert);
     logger.info("Alert deleted successfully with ID: {}", id);
+
+    photoService.deleteAlertDirectoryOnDisk(id);
+    pdfService.deleteReportPdf(id);
+  }
+
+  // Удаление PDF-отчёта с диска и очистка поля reportUrl у инцидента
+  @Transactional
+  public AlertResponseDTO deleteIncidentReport(Long alertId) {
+    Alert alert = alertRepository.findById(alertId)
+        .orElseThrow(() -> {
+          logger.error("Alert not found with ID: {}", alertId);
+          return new ResourceNotFoundException("Alert not found");
+        });
+    pdfService.deleteReportPdf(alertId);
+    alert.setReportUrl(null);
+    Alert saved = alertRepository.save(alert);
+    logger.info("Report URL cleared for alert ID: {}", alertId);
+    return convertToDTO(saved);
   }
 
   public AlertResponseDTO convertToDTO(Alert alert) {

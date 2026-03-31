@@ -1,5 +1,6 @@
 package com.example.demo.service;
 
+import com.example.demo.exception.BadRequestException;
 import com.example.demo.exception.ResourceNotFoundException;
 import com.example.demo.model.Alert;
 import com.example.demo.repository.AlertRepository;
@@ -17,8 +18,12 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Stream;
+
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class PhotoService {
@@ -70,5 +75,75 @@ public class PhotoService {
     }
 
     return photoUrls;
+  }
+
+  @Transactional
+  public void deletePhoto(Long alertId, String photoUrl) {
+    if (photoUrl == null || photoUrl.isBlank()) {
+      throw new BadRequestException("Photo URL is required");
+    }
+
+    Alert alert = alertRepository.findById(alertId)
+        .orElseThrow(() -> {
+          logger.error("Alert not found with ID: {}", alertId);
+          return new ResourceNotFoundException("Alert not found");
+        });
+
+    if (!alert.getPhotoUrls().contains(photoUrl)) {
+      throw new BadRequestException("Photo URL does not belong to this incident");
+    }
+
+    Path filePath = resolvePhotoPath(alertId, photoUrl);
+    try {
+      Files.deleteIfExists(filePath);
+    } catch (IOException e) {
+      logger.error("Failed to delete photo file: {}", filePath, e);
+      throw new RuntimeException("Failed to delete photo file", e);
+    }
+
+    alert.getPhotoUrls().remove(photoUrl);
+    alertRepository.save(alert);
+    logger.info("Photo removed from alert ID {}: {}", alertId, photoUrl);
+  }
+
+  // Удаление каталога на диске после удаления инцидента
+  public void deleteAlertDirectoryOnDisk(Long alertId) {
+    Path dir = Paths.get(uploadDir, "alerts", alertId.toString()).normalize();
+    Path base = Paths.get(uploadDir, "alerts").normalize();
+    if (!dir.startsWith(base) || !Files.isDirectory(dir)) {
+      return;
+    }
+    try {
+      if (Files.exists(dir)) {
+        try (Stream<Path> walk = Files.walk(dir)) {
+          walk.sorted(Comparator.reverseOrder()).forEach(p -> {
+            try {
+              Files.deleteIfExists(p);
+            } catch (IOException e) {
+              logger.warn("Could not delete {}", p, e);
+            }
+          });
+        }
+      }
+    } catch (IOException e) {
+      logger.error("Failed to delete alert photo directory: {}", dir, e);
+    }
+  }
+
+  private Path resolvePhotoPath(long alertId, String photoUrl) {
+    String prefix = "/uploads/alerts/" + alertId + "/";
+    if (!photoUrl.startsWith(prefix)) {
+      throw new BadRequestException("Invalid photo URL for this incident");
+    }
+    String filename = photoUrl.substring(prefix.length());
+    if (filename.isEmpty() || filename.contains("..") || filename.indexOf('/') >= 0 || filename.indexOf('\\') >= 0) {
+      throw new BadRequestException("Invalid photo path");
+    }
+    Path dir = Paths.get(uploadDir, "alerts", Long.toString(alertId)).normalize();
+    Path file = dir.resolve(filename).normalize();
+    if (!file.startsWith(dir)) {
+      throw new BadRequestException("Invalid photo path");
+    }
+    return file;
   }
 }

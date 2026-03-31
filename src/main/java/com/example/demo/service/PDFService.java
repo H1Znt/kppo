@@ -92,4 +92,22 @@ public class PDFService {
         throw new RuntimeException("Failed to generate PDF report", e);
     }
   }
+
+  // Удаление PDF-отчёта с диска после удаления инцидента
+  public void deleteReportPdf(Long alertId) {
+    try {
+      Path reportsDir = Paths.get(uploadDir, "reports").normalize();
+      String filename = "alert_" + alertId + "_report.pdf";
+      Path filePath = reportsDir.resolve(filename).normalize();
+      if (!filePath.startsWith(reportsDir)) {
+        logger.warn("Unsafe report path rejected: {}", filePath);
+        return;
+      }
+      if (Files.deleteIfExists(filePath)) {
+        logger.info("Deleted PDF report for alert ID: {}", alertId);
+      }
+    } catch (IOException e) {
+      logger.error("Failed to delete PDF for alert ID: {}", alertId, e);
+    }
+  }
 }

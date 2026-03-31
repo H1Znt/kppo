@@ -55,7 +55,9 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/incidents/**").hasAuthority("alert.read")
                 .requestMatchers(HttpMethod.POST, "/api/incidents/**").hasAuthority("alert.write")
                 .requestMatchers(HttpMethod.PUT, "/api/incidents/**").hasAuthority("alert.write")
-                .requestMatchers(HttpMethod.DELETE, "/api/incidents/**").hasAuthority("alert.delete")
+                .requestMatchers(HttpMethod.DELETE, "/api/incidents/*/photos").hasAuthority("alert.write")
+                .requestMatchers(HttpMethod.DELETE, "/api/incidents/*/report").hasAuthority("alert.write")
+                .requestMatchers(HttpMethod.DELETE, "/api/incidents/*").hasAuthority("alert.delete")
                 .anyRequest().authenticated()
             )
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
