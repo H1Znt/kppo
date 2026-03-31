@@ -7,6 +7,9 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
+import com.example.demo.model.EventType;
+import com.example.demo.model.StatusType;
+
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Map;
@@ -51,5 +54,40 @@ public class TelegramService {
       LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss"))
     );
     sendNotification(text);
+  }
+
+  // Уведомление в Telegram при смене статуса инцидента
+  public void sendAlertStatusChangeNotification(
+      Long alertId,
+      StatusType previousStatus,
+      StatusType newStatus,
+      EventType eventType,
+      String sensorLocation) {
+    String text = String.format(
+      "📋 Статус инцидента изменён\n\n"
+          + "ID: %d\n"
+          + "Тип события: %s\n"
+          + "Местоположение: %s\n"
+          + "Было: %s\n"
+          + "Стало: %s\n"
+          + "Время: %s",
+      alertId,
+      eventType != null ? eventType.name() : "—",
+      sensorLocation != null ? sensorLocation : "—",
+      statusLabelRu(previousStatus),
+      statusLabelRu(newStatus),
+      LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss")));
+    sendNotification(text);
+  }
+
+  private static String statusLabelRu(StatusType s) {
+    if (s == null) {
+      return "—";
+    }
+    return switch (s) {
+      case NEW -> "Новый";
+      case IN_PROGRESS -> "В работе";
+      case RESOLVED -> "Закрыт";
+    };
   }
 }

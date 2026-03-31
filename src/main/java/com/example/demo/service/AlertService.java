@@ -117,6 +117,7 @@ public class AlertService {
         return new ResourceNotFoundException("Alert not found");
       });
 
+    StatusType previousStatus = alert.getStatus();
     alert.setStatus(newStatus);
     Alert saved = alertRepository.save(alert);
 
@@ -130,6 +131,20 @@ public class AlertService {
       } catch (Exception e) {
         logger.error("Failed to generate PDF report for alert ID: {}", alertId, e);
         // Не прерываем выполнение, если PDF не удалось создать — reportUrl в БД не ставим
+      }
+    }
+
+    if (previousStatus != newStatus) {
+      try {
+        Sensor sensor = saved.getSensor();
+        telegramService.sendAlertStatusChangeNotification(
+            saved.getId(),
+            previousStatus,
+            newStatus,
+            saved.getType(),
+            sensor != null ? sensor.getLocation() : null);
+      } catch (Exception e) {
+        logger.warn("Telegram status notification skipped or failed for alert ID: {}", alertId, e);
       }
     }
 
