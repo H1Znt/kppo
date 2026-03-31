@@ -114,7 +114,8 @@ mvnw.cmd spring-boot-run
 
 - Загрузки: каталог из **`app.upload.dir`** (по умолчанию `uploads`).
 - PDF при переводе инцидента в статус **RESOLVED**: каталог `uploads/reports`, URL сохраняется в поле **`reportUrl`** сущности, если PDF создан успешно.
-- Фото и отчёты отдаются по путям **`/uploads/**`** (`WebConfig`). Для SPA без передачи JWT в `<img>` / прямой ссылке **`GET /uploads/**` разрешён без авторизации**; загрузка по-прежнему только через API с правом **`alert.write`** (`POST /api/incidents/{id}/photos`).
+- Фото и отчёты отдаются по путям **`/uploads/**`** (`WebConfig`). Для SPA без передачи JWT в `<img>` / прямой ссылке **`GET /uploads/**` разрешён без авторизации**; загрузка — **`POST /api/incidents/{id}/photos`** (`alert.write`).
+- Удаление вложений: **`DELETE /api/incidents/{id}/photos?url=...`** (URL закодировать, как в ответе API) — снимает файл с диска и строку из инцидента; **`DELETE /api/incidents/{id}/report`** — удаляет PDF и очищает **`reportUrl`** (оба метода требуют **`alert.write`**). Удаление всего инцидента **`DELETE /api/incidents/{id}`** (`alert.delete`) также удаляет каталог **`uploads/alerts/{id}/`** и файл отчёта **`alert_{id}_report.pdf`** на диске.
 
 ## Дамп базы для репозитория / отчёта
 
