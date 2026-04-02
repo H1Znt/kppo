@@ -1,5 +1,6 @@
 package com.example.demo.dto;
 
+import com.example.demo.error.ApiErrorCodes;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -12,10 +13,10 @@ import lombok.Setter;
 @AllArgsConstructor
 public class SensorDTO {
     
-  @NotBlank(message = "Model is required")
+  @NotBlank(message = ApiErrorCodes.SENSOR_MODEL_REQUIRED)
   private String model;
-  
-  @NotBlank(message = "Location is required")
+
+  @NotBlank(message = ApiErrorCodes.SENSOR_LOCATION_REQUIRED)
   private String location;
   
   private Long assignedToId; // ID пользователя, которому назначен датчик

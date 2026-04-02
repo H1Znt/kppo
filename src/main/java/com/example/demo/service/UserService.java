@@ -2,6 +2,7 @@ package com.example.demo.service;
 
 import com.example.demo.dto.MeResponseDTO;
 import com.example.demo.dto.UserDTO;
+import com.example.demo.error.ApiErrorCodes;
 import com.example.demo.exception.BadRequestException;
 import com.example.demo.exception.ResourceNotFoundException;
 import com.example.demo.model.Permission;
@@ -43,12 +44,12 @@ public class UserService {
     logger.info("Creating user with username: {}", userDTO.getUsername());
 
     if (userDTO.getPassword() == null || userDTO.getPassword().isBlank()) {
-      throw new BadRequestException("Укажите пароль");
+      throw new BadRequestException(ApiErrorCodes.PASSWORD_REQUIRED, "Password is required");
     }
 
     if (userRepository.existsByUsername(userDTO.getUsername())) {
       logger.error("Username already exists: {}", userDTO.getUsername());
-      throw new BadRequestException("Пользователь с таким логином уже существует");
+      throw new BadRequestException(ApiErrorCodes.USERNAME_TAKEN, "Username already taken");
     }
 
     User user = new User();
@@ -57,16 +58,17 @@ public class UserService {
     user.setEnabled(true);
 
     if (userDTO.getRoleTitles() == null || userDTO.getRoleTitles().isEmpty()) {
-      throw new BadRequestException("Выберите одну роль");
+      throw new BadRequestException(ApiErrorCodes.ROLE_REQUIRED, "Select one role");
     }
     if (userDTO.getRoleTitles().size() != 1) {
-      throw new BadRequestException("Нужно указать ровно одну роль");
+      throw new BadRequestException(ApiErrorCodes.ROLE_SINGLE_REQUIRED, "Exactly one role required");
     }
     Set<Role> roles = userDTO.getRoleTitles().stream()
       .map(roleTitle -> roleRepository.findByTitle(roleTitle)
         .orElseThrow(() -> {
           logger.error("Role not found: {}", roleTitle);
-          return new ResourceNotFoundException("Role not found: " + roleTitle);
+          return new ResourceNotFoundException(
+              ApiErrorCodes.ROLE_NOT_FOUND, "Role not found: " + roleTitle);
         }))
       .collect(Collectors.toSet());
     user.setRoles(roles);
@@ -81,7 +83,7 @@ public class UserService {
     return userRepository.findByUsername(username)
       .orElseThrow(() -> {
         logger.error("User not found: {}", username);
-        return new ResourceNotFoundException("User not found");
+        return new ResourceNotFoundException(ApiErrorCodes.USER_NOT_FOUND, "User not found");
       });
   }
 
@@ -90,7 +92,7 @@ public class UserService {
     return userRepository.findById(id)
       .orElseThrow(() -> {
         logger.error("User not found with ID: {}", id);
-        return new ResourceNotFoundException("User not found");
+        return new ResourceNotFoundException(ApiErrorCodes.USER_NOT_FOUND, "User not found");
       });
   }
 
@@ -104,7 +106,7 @@ public class UserService {
     User user = userRepository.findByUsernameWithRolesAndPermissions(username)
         .orElseThrow(() -> {
           logger.error("User not found: {}", username);
-          return new ResourceNotFoundException("User not found");
+          return new ResourceNotFoundException(ApiErrorCodes.USER_NOT_FOUND, "User not found");
         });
     Set<String> roleTitles = user.getRoles().stream().map(Role::getTitle).collect(Collectors.toSet());
     Set<String> permissions = user.getRoles().stream()
@@ -125,14 +127,14 @@ public class UserService {
 
     User user = userRepository.findById(id).orElseThrow(() -> {
       logger.error("User not found with ID: {}", id);
-      return new ResourceNotFoundException("User not found");
+      return new ResourceNotFoundException(ApiErrorCodes.USER_NOT_FOUND, "User not found");
     });
 
     // Обновляем username только если он изменился и не занят
     if (userDTO.getUsername() != null && !userDTO.getUsername().equals(user.getUsername())) {
       if (userRepository.existsByUsername(userDTO.getUsername())) {
         logger.error("Username already exists: {}", userDTO.getUsername());
-        throw new BadRequestException("Пользователь с таким логином уже существует");
+        throw new BadRequestException(ApiErrorCodes.USERNAME_TAKEN, "Username already taken");
       }
       user.setUsername(userDTO.getUsername());
     }
@@ -145,16 +147,17 @@ public class UserService {
     // Обновляем роли (ровно одна роль)
     if (userDTO.getRoleTitles() != null) {
       if (userDTO.getRoleTitles().isEmpty()) {
-        throw new BadRequestException("Выберите одну роль");
+        throw new BadRequestException(ApiErrorCodes.ROLE_REQUIRED, "Select one role");
       }
       if (userDTO.getRoleTitles().size() != 1) {
-        throw new BadRequestException("Нужно указать ровно одну роль");
+        throw new BadRequestException(ApiErrorCodes.ROLE_SINGLE_REQUIRED, "Exactly one role required");
       }
       Set<Role> roles = userDTO.getRoleTitles().stream()
         .map(roleTitle -> roleRepository.findByTitle(roleTitle)
           .orElseThrow(() -> {
             logger.error("Role not found: {}", roleTitle);
-            return new ResourceNotFoundException("Role not found: " + roleTitle);
+            return new ResourceNotFoundException(
+                ApiErrorCodes.ROLE_NOT_FOUND, "Role not found: " + roleTitle);
           }))
         .collect(Collectors.toSet());
       user.setRoles(roles);
@@ -193,7 +196,7 @@ public class UserService {
     logger.info("Permanently deleting user ID: {}", id);
     User user = userRepository.findById(id).orElseThrow(() -> {
       logger.error("User not found with ID: {}", id);
-      return new ResourceNotFoundException("User not found");
+      return new ResourceNotFoundException(ApiErrorCodes.USER_NOT_FOUND, "User not found");
     });
 
     for (Sensor sensor : sensorRepository.findByAssignedToId(id)) {

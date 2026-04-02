@@ -1,5 +1,6 @@
 package com.example.demo.validation;
 
+import com.example.demo.error.ApiErrorCodes;
 import jakarta.validation.Constraint;
 import jakarta.validation.Payload;
 
@@ -14,7 +15,7 @@ import java.lang.annotation.Target;
 @Constraint(validatedBy = EventTypeValidator.class)
 @Documented
 public @interface ValidEventType {
-  String message() default "Invalid event type";
+  String message() default ApiErrorCodes.ALERT_EVENT_TYPE_INVALID;
 
   Class<?>[] groups() default {};
 

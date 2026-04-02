@@ -1,5 +1,6 @@
 package com.example.demo.dto;
 
+import com.example.demo.error.ApiErrorCodes;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -12,9 +13,9 @@ import lombok.Setter;
 @AllArgsConstructor
 public class LoginRequestDTO {
     
-  @NotBlank(message = "Username is required")
+  @NotBlank(message = ApiErrorCodes.LOGIN_USERNAME_BLANK)
   private String username;
-  
-  @NotBlank(message = "Password is required")
+
+  @NotBlank(message = ApiErrorCodes.LOGIN_PASSWORD_BLANK)
   private String password;
 }

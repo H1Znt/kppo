@@ -1,5 +1,6 @@
 package com.example.demo.service;
 
+import com.example.demo.error.ApiErrorCodes;
 import com.example.demo.exception.BadRequestException;
 import com.example.demo.exception.ResourceNotFoundException;
 import com.example.demo.model.Alert;
@@ -42,7 +43,7 @@ public class PhotoService {
     Alert alert = alertRepository.findById(alertId)
       .orElseThrow(() -> {
         logger.error("Alert not found with ID: {}", alertId);
-        return new ResourceNotFoundException("Alert not found");
+        return new ResourceNotFoundException(ApiErrorCodes.ALERT_NOT_FOUND, "Alert not found");
       });
 
     List<String> photoUrls = new ArrayList<>();
@@ -80,17 +81,18 @@ public class PhotoService {
   @Transactional
   public void deletePhoto(Long alertId, String photoUrl) {
     if (photoUrl == null || photoUrl.isBlank()) {
-      throw new BadRequestException("Photo URL is required");
+      throw new BadRequestException(ApiErrorCodes.PHOTO_URL_REQUIRED, "Photo URL is required");
     }
 
     Alert alert = alertRepository.findById(alertId)
         .orElseThrow(() -> {
           logger.error("Alert not found with ID: {}", alertId);
-          return new ResourceNotFoundException("Alert not found");
+          return new ResourceNotFoundException(ApiErrorCodes.ALERT_NOT_FOUND, "Alert not found");
         });
 
     if (!alert.getPhotoUrls().contains(photoUrl)) {
-      throw new BadRequestException("Photo URL does not belong to this incident");
+      throw new BadRequestException(
+          ApiErrorCodes.PHOTO_URL_NOT_FOR_INCIDENT, "Photo URL does not belong to this incident");
     }
 
     Path filePath = resolvePhotoPath(alertId, photoUrl);
@@ -133,16 +135,17 @@ public class PhotoService {
   private Path resolvePhotoPath(long alertId, String photoUrl) {
     String prefix = "/uploads/alerts/" + alertId + "/";
     if (!photoUrl.startsWith(prefix)) {
-      throw new BadRequestException("Invalid photo URL for this incident");
+      throw new BadRequestException(
+          ApiErrorCodes.PHOTO_URL_INVALID, "Invalid photo URL for this incident");
     }
     String filename = photoUrl.substring(prefix.length());
     if (filename.isEmpty() || filename.contains("..") || filename.indexOf('/') >= 0 || filename.indexOf('\\') >= 0) {
-      throw new BadRequestException("Invalid photo path");
+      throw new BadRequestException(ApiErrorCodes.PHOTO_PATH_INVALID, "Invalid photo path");
     }
     Path dir = Paths.get(uploadDir, "alerts", Long.toString(alertId)).normalize();
     Path file = dir.resolve(filename).normalize();
     if (!file.startsWith(dir)) {
-      throw new BadRequestException("Invalid photo path");
+      throw new BadRequestException(ApiErrorCodes.PHOTO_PATH_INVALID, "Invalid photo path");
     }
     return file;
   }

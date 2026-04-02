@@ -2,6 +2,7 @@ package com.example.demo.service;
 
 import com.example.demo.dto.AlertDTO;
 import com.example.demo.dto.AlertResponseDTO;
+import com.example.demo.error.ApiErrorCodes;
 import com.example.demo.exception.BadRequestException;
 import com.example.demo.exception.ResourceNotFoundException;
 import com.example.demo.model.Alert;
@@ -47,13 +48,13 @@ public class AlertService {
     logger.info("Creating new alert for sensor ID: {}", alertDTO.getSensorId());
 
     if (alertDTO.getType() == null || alertDTO.getType().isBlank()) {
-      throw new BadRequestException("Event type is required");
+      throw new BadRequestException(ApiErrorCodes.EVENT_TYPE_REQUIRED, "Event type is required");
     }
 
     Sensor sensor = sensorRepository.findById(alertDTO.getSensorId())
       .orElseThrow(() -> {
         logger.error("Sensor not found with ID: {}", alertDTO.getSensorId());
-        return new ResourceNotFoundException("Sensor not found");
+        return new ResourceNotFoundException(ApiErrorCodes.SENSOR_NOT_FOUND, "Sensor not found");
       });
 
     EventType eventType = parseEventType(alertDTO.getType());
@@ -96,7 +97,7 @@ public class AlertService {
     Alert alert = alertRepository.findById(alertId)
       .orElseThrow(() -> {
         logger.error("Alert not found with ID: {}", alertId);
-        return new ResourceNotFoundException("Alert not found");
+        return new ResourceNotFoundException(ApiErrorCodes.ALERT_NOT_FOUND, "Alert not found");
       });
 
     Sensor sensor = alert.getSensor();
@@ -114,7 +115,7 @@ public class AlertService {
     Alert alert = alertRepository.findById(alertId)
       .orElseThrow(() -> {
         logger.error("Alert not found with ID: {}", alertId);
-        return new ResourceNotFoundException("Alert not found");
+        return new ResourceNotFoundException(ApiErrorCodes.ALERT_NOT_FOUND, "Alert not found");
       });
 
     StatusType previousStatus = alert.getStatus();
@@ -157,7 +158,7 @@ public class AlertService {
     Alert alert = alertRepository.findById(id)
       .orElseThrow(() -> {
         logger.error("Alert not found with ID: {}", id);
-        return new ResourceNotFoundException("Alert not found");
+        return new ResourceNotFoundException(ApiErrorCodes.ALERT_NOT_FOUND, "Alert not found");
       });
     return convertToDTO(alert);
   }
@@ -168,7 +169,7 @@ public class AlertService {
     Alert alert = alertRepository.findById(id)
       .orElseThrow(() -> {
         logger.error("Alert not found with ID: {}", id);
-        return new ResourceNotFoundException("Alert not found");
+        return new ResourceNotFoundException(ApiErrorCodes.ALERT_NOT_FOUND, "Alert not found");
       });
 
     // Обновляем только изменяемые поля
@@ -176,7 +177,7 @@ public class AlertService {
       Sensor sensor = sensorRepository.findById(alertDTO.getSensorId())
         .orElseThrow(() -> {
           logger.error("Sensor not found with ID: {}", alertDTO.getSensorId());
-          return new ResourceNotFoundException("Sensor not found");
+          return new ResourceNotFoundException(ApiErrorCodes.SENSOR_NOT_FOUND, "Sensor not found");
         });
       alert.setSensor(sensor);
     }
@@ -201,7 +202,7 @@ public class AlertService {
     Alert alert = alertRepository.findById(id)
       .orElseThrow(() -> {
         logger.error("Alert not found with ID: {}", id);
-        return new ResourceNotFoundException("Alert not found");
+        return new ResourceNotFoundException(ApiErrorCodes.ALERT_NOT_FOUND, "Alert not found");
       });
     alertRepository.delete(alert);
     logger.info("Alert deleted successfully with ID: {}", id);
@@ -216,7 +217,7 @@ public class AlertService {
     Alert alert = alertRepository.findById(alertId)
         .orElseThrow(() -> {
           logger.error("Alert not found with ID: {}", alertId);
-          return new ResourceNotFoundException("Alert not found");
+          return new ResourceNotFoundException(ApiErrorCodes.ALERT_NOT_FOUND, "Alert not found");
         });
     pdfService.deleteReportPdf(alertId);
     alert.setReportUrl(null);

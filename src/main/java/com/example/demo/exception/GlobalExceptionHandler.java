@@ -1,6 +1,7 @@
 package com.example.demo.exception;
 
 import com.example.demo.dto.ErrorResponse;
+import com.example.demo.error.ApiErrorCodes;
 import jakarta.validation.ConstraintViolationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,8 +29,9 @@ public class GlobalExceptionHandler {
   public ResponseEntity<ErrorResponse> handleResourceNotFound(
       ResourceNotFoundException ex, WebRequest request) {
     logger.warn("Resource not found: {}", ex.getMessage());
-    ErrorResponse body = new ErrorResponse(
-        HttpStatus.NOT_FOUND.value(), ex.getMessage(), path(request));
+    ErrorResponse body =
+        new ErrorResponse(
+            HttpStatus.NOT_FOUND.value(), ex.getCode(), ex.getMessage(), path(request));
     return new ResponseEntity<>(body, HttpStatus.NOT_FOUND);
   }
 
@@ -37,8 +39,9 @@ public class GlobalExceptionHandler {
   public ResponseEntity<ErrorResponse> handleBadRequest(
       BadRequestException ex, WebRequest request) {
     logger.warn("Bad request: {}", ex.getMessage());
-    ErrorResponse body = new ErrorResponse(
-        HttpStatus.BAD_REQUEST.value(), ex.getMessage(), path(request));
+    ErrorResponse body =
+        new ErrorResponse(
+            HttpStatus.BAD_REQUEST.value(), ex.getCode(), ex.getMessage(), path(request));
     return new ResponseEntity<>(body, HttpStatus.BAD_REQUEST);
   }
 
@@ -46,13 +49,14 @@ public class GlobalExceptionHandler {
   public ResponseEntity<ErrorResponse> handleUnauthorized(
       UnauthorizedException ex, WebRequest request) {
     logger.warn("Unauthorized: {}", ex.getMessage());
-    ErrorResponse body = new ErrorResponse(
-        HttpStatus.UNAUTHORIZED.value(), ex.getMessage(), path(request));
+    ErrorResponse body =
+        new ErrorResponse(
+            HttpStatus.UNAUTHORIZED.value(), ex.getCode(), ex.getMessage(), path(request));
     return new ResponseEntity<>(body, HttpStatus.UNAUTHORIZED);
   }
 
   @ExceptionHandler(MethodArgumentNotValidException.class)
-  public ResponseEntity<Map<String, Object>> handleValidation(
+  public ResponseEntity<ErrorResponse> handleValidation(
       MethodArgumentNotValidException ex, WebRequest request) {
     logger.warn("Validation error: {}", ex.getMessage());
     Map<String, String> fieldErrors = new HashMap<>();
@@ -63,31 +67,38 @@ public class GlobalExceptionHandler {
         fieldErrors.put(error.getObjectName(), error.getDefaultMessage());
       }
     });
-    Map<String, Object> response = new HashMap<>();
-    response.put("status", HttpStatus.BAD_REQUEST.value());
-    response.put("message", "Validation failed");
-    response.put("errors", fieldErrors);
-    response.put("timestamp", java.time.LocalDateTime.now());
-    response.put("path", path(request));
-    return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+    ErrorResponse body =
+        new ErrorResponse(
+            HttpStatus.BAD_REQUEST.value(),
+            ApiErrorCodes.VALIDATION_FAILED,
+            "Validation failed",
+            path(request),
+            fieldErrors);
+    return new ResponseEntity<>(body, HttpStatus.BAD_REQUEST);
   }
 
   @ExceptionHandler(ConstraintViolationException.class)
   public ResponseEntity<ErrorResponse> handleConstraintViolation(
       ConstraintViolationException ex, WebRequest request) {
     logger.warn("Constraint violation: {}", ex.getMessage());
-    ErrorResponse body = new ErrorResponse(
-        HttpStatus.BAD_REQUEST.value(), ex.getMessage(), path(request));
+    ErrorResponse body =
+        new ErrorResponse(
+            HttpStatus.BAD_REQUEST.value(),
+            ApiErrorCodes.CONSTRAINT_VIOLATION,
+            ex.getMessage(),
+            path(request));
     return new ResponseEntity<>(body, HttpStatus.BAD_REQUEST);
   }
 
   @ExceptionHandler(Exception.class)
   public ResponseEntity<ErrorResponse> handleGeneric(Exception ex, WebRequest request) {
     logger.error("Unexpected error: {}", ex.getMessage(), ex);
-    ErrorResponse body = new ErrorResponse(
-        HttpStatus.INTERNAL_SERVER_ERROR.value(),
-        "An unexpected error occurred",
-        path(request));
+    ErrorResponse body =
+        new ErrorResponse(
+            HttpStatus.INTERNAL_SERVER_ERROR.value(),
+            ApiErrorCodes.INTERNAL_ERROR,
+            "An unexpected error occurred",
+            path(request));
     return new ResponseEntity<>(body, HttpStatus.INTERNAL_SERVER_ERROR);
   }
 }

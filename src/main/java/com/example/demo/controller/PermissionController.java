@@ -1,6 +1,7 @@
 package com.example.demo.controller;
 
 import com.example.demo.dto.PermissionResponseDTO;
+import com.example.demo.error.ApiErrorCodes;
 import com.example.demo.exception.ResourceNotFoundException;
 import com.example.demo.model.Permission;
 import com.example.demo.repository.PermissionRepository;
@@ -35,7 +36,10 @@ public class PermissionController {
   public ResponseEntity<PermissionResponseDTO> getPermissionById(@PathVariable Long id) {
     logger.info("Fetching permission with ID: {}", id);
     Permission permission = permissionRepository.findById(id)
-      .orElseThrow(() -> new ResourceNotFoundException("Permission not found"));
+      .orElseThrow(
+          () ->
+              new ResourceNotFoundException(
+                  ApiErrorCodes.PERMISSION_NOT_FOUND, "Permission not found"));
     return ResponseEntity.ok(toPermissionResponseDTO(permission));
   }
 

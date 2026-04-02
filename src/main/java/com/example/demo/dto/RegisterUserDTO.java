@@ -1,5 +1,6 @@
 package com.example.demo.dto;
 
+import com.example.demo.error.ApiErrorCodes;
 import com.example.demo.validation.UniqueUsername;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -16,13 +17,13 @@ import java.util.Set;
 @AllArgsConstructor
 public class RegisterUserDTO {
 
-  @NotBlank(message = "Username is required")
-  @Size(min = 3, max = 50, message = "Username must be between 3 and 50 characters")
-  @UniqueUsername(message = "Username already exists")
+  @NotBlank(message = ApiErrorCodes.REGISTER_USERNAME_BLANK)
+  @Size(min = 3, max = 50, message = ApiErrorCodes.REGISTER_USERNAME_SIZE)
+  @UniqueUsername(message = ApiErrorCodes.USERNAME_TAKEN)
   private String username;
 
-  @NotBlank(message = "Password is required")
-  @Size(min = 6, message = "Password must be at least 6 characters")
+  @NotBlank(message = ApiErrorCodes.REGISTER_PASSWORD_BLANK)
+  @Size(min = 6, message = ApiErrorCodes.REGISTER_PASSWORD_SIZE)
   private String password;
 
   private Set<String> roleTitles;

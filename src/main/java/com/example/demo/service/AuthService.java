@@ -1,6 +1,7 @@
 package com.example.demo.service;
 
 import com.example.demo.dto.LoginRequestDTO;
+import com.example.demo.error.ApiErrorCodes;
 import com.example.demo.exception.UnauthorizedException;
 import com.example.demo.model.User;
 import com.example.demo.repository.UserRepository;
@@ -31,17 +32,20 @@ public class AuthService {
     User user = userRepository.findByUsername(loginRequest.getUsername())
       .orElseThrow(() -> {
         logger.error("Login failed, user not found: {}", loginRequest.getUsername());
-        return new UnauthorizedException("Пользователь с таким логином не найден");
+        return new UnauthorizedException(
+            ApiErrorCodes.LOGIN_USER_NOT_FOUND, "User not found");
       });
 
     if (!user.isEnabled()) {
       logger.error("User is disabled: {}", loginRequest.getUsername());
-      throw new UnauthorizedException("Учётная запись отключена. Обратитесь к администратору.");
+      throw new UnauthorizedException(
+          ApiErrorCodes.LOGIN_ACCOUNT_DISABLED, "Account is disabled");
     }
 
     if (!passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
       logger.error("Invalid password for username: {}", loginRequest.getUsername());
-      throw new UnauthorizedException("Неверный пароль");
+      throw new UnauthorizedException(
+          ApiErrorCodes.LOGIN_INVALID_PASSWORD, "Invalid password");
     }
 
     String token = jwtUtil.generateToken(user.getUsername());

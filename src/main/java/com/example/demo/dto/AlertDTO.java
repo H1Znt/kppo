@@ -1,5 +1,6 @@
 package com.example.demo.dto;
 
+import com.example.demo.error.ApiErrorCodes;
 import com.example.demo.validation.ValidEventType;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -15,10 +16,10 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class AlertDTO {
     
-  @NotNull(message = "Sensor ID is required")
+  @NotNull(message = ApiErrorCodes.ALERT_SENSOR_ID_REQUIRED)
   private Long sensorId;
-  
-  @ValidEventType(message = "Invalid event type (use ACCIDENT, HARD_BRAKING, BUTTON)")
+
+  @ValidEventType(message = ApiErrorCodes.ALERT_EVENT_TYPE_INVALID)
   private String type;
   
   private String description;

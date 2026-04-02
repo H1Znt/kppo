@@ -1,5 +1,6 @@
 package com.example.demo.validation;
 
+import com.example.demo.error.ApiErrorCodes;
 import jakarta.validation.Constraint;
 import jakarta.validation.Payload;
 
@@ -14,8 +15,8 @@ import java.lang.annotation.Target;
 @Constraint(validatedBy = UniqueUsernameValidator.class)
 @Documented
 public @interface UniqueUsername {
-  String message() default "Username already exists";
-
+  String message() default ApiErrorCodes.USERNAME_TAKEN;
+  
   Class<?>[] groups() default {};
 
   Class<? extends Payload>[] payload() default {};

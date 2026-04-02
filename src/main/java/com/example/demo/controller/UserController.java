@@ -2,6 +2,7 @@ package com.example.demo.controller;
 
 import com.example.demo.dto.UserDTO;
 import com.example.demo.dto.UserResponseDTO;
+import com.example.demo.error.ApiErrorCodes;
 import com.example.demo.exception.BadRequestException;
 import com.example.demo.model.User;
 import com.example.demo.service.UserService;
@@ -63,7 +64,8 @@ public class UserController {
     if (principal != null) {
       User current = userService.findByUsername(principal.getUsername());
       if (current.getId().equals(id)) {
-        throw new BadRequestException("Cannot deactivate your own account");
+        throw new BadRequestException(
+            ApiErrorCodes.CANNOT_DEACTIVATE_SELF, "Cannot deactivate your own account");
       }
     }
     logger.info("Deactivating user ID: {}", id);
@@ -85,7 +87,8 @@ public class UserController {
     }
     User current = userService.findByUsername(principal.getUsername());
     if (current.getId().equals(id)) {
-      throw new BadRequestException("Cannot delete your own account");
+      throw new BadRequestException(
+          ApiErrorCodes.CANNOT_DELETE_SELF, "Cannot delete your own account");
     }
     logger.info("Permanently deleting user ID: {}", id);
     userService.permanentlyDeleteUser(id);

@@ -1,5 +1,6 @@
 package com.example.demo.dto;
 
+import com.example.demo.error.ApiErrorCodes;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
@@ -15,11 +16,11 @@ import java.util.Set;
 @AllArgsConstructor
 public class UserDTO {
     
-  @NotBlank(message = "Username is required")
-  @Size(min = 3, max = 50, message = "Username must be between 3 and 50 characters")
+  @NotBlank(message = ApiErrorCodes.USER_USERNAME_BLANK)
+  @Size(min = 3, max = 50, message = ApiErrorCodes.USER_USERNAME_SIZE)
   private String username;
 
-  @Size(min = 6, message = "Password must be at least 6 characters")
+  @Size(min = 6, message = ApiErrorCodes.USER_PASSWORD_SIZE)
   private String password;
   
   private Set<String> roleTitles; // Названия ролей

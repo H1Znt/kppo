@@ -1,6 +1,7 @@
 package com.example.demo.controller;
 
 import com.example.demo.dto.RoleResponseDTO;
+import com.example.demo.error.ApiErrorCodes;
 import com.example.demo.exception.ResourceNotFoundException;
 import com.example.demo.model.Role;
 import com.example.demo.repository.RoleRepository;
@@ -35,7 +36,8 @@ public class RoleController {
   public ResponseEntity<RoleResponseDTO> getRoleById(@PathVariable Long id) {
     logger.info("Fetching role with ID: {}", id);
     Role role = roleRepository.findById(id)
-      .orElseThrow(() -> new ResourceNotFoundException("Role not found"));
+      .orElseThrow(
+          () -> new ResourceNotFoundException(ApiErrorCodes.ROLE_NOT_FOUND, "Role not found"));
     return ResponseEntity.ok(toRoleResponseDTO(role));
   }
 
