@@ -23,12 +23,12 @@ FROM roles r, permissions p
 WHERE r.title = 'ADMIN'
 ON CONFLICT DO NOTHING;
 
--- Роль с разрешениями, для OPERATOR - только чтение и запись Alert
+-- Роль с разрешениями, для OPERATOR — инциденты + просмотр датчиков (чтобы видеть ID для привязки)
 INSERT INTO role_permissions (role_id, permission_id)
 SELECT r.id, p.id
 FROM roles r, permissions p
 WHERE r.title = 'OPERATOR'
-  AND p.permission IN ('alert.read', 'alert.write')
+  AND p.permission IN ('alert.read', 'alert.write', 'sensor.read')
 ON CONFLICT DO NOTHING;
 
 -- Роль с разрешениями, для VIEWER - только чтение

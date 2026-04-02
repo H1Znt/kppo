@@ -30,18 +30,18 @@ public class AuthService {
 
     User user = userRepository.findByUsername(loginRequest.getUsername())
       .orElseThrow(() -> {
-        logger.error("Invalid credentials for username: {}", loginRequest.getUsername());
-        return new UnauthorizedException("Invalid credentials");
+        logger.error("Login failed, user not found: {}", loginRequest.getUsername());
+        return new UnauthorizedException("Пользователь с таким логином не найден");
       });
 
     if (!user.isEnabled()) {
       logger.error("User is disabled: {}", loginRequest.getUsername());
-      throw new UnauthorizedException("User is disabled");
+      throw new UnauthorizedException("Учётная запись отключена. Обратитесь к администратору.");
     }
 
     if (!passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
       logger.error("Invalid password for username: {}", loginRequest.getUsername());
-      throw new UnauthorizedException("Invalid credentials");
+      throw new UnauthorizedException("Неверный пароль");
     }
 
     String token = jwtUtil.generateToken(user.getUsername());

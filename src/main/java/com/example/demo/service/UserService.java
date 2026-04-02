@@ -43,12 +43,12 @@ public class UserService {
     logger.info("Creating user with username: {}", userDTO.getUsername());
 
     if (userDTO.getPassword() == null || userDTO.getPassword().isBlank()) {
-      throw new BadRequestException("Password is required");
+      throw new BadRequestException("Укажите пароль");
     }
 
     if (userRepository.existsByUsername(userDTO.getUsername())) {
       logger.error("Username already exists: {}", userDTO.getUsername());
-      throw new BadRequestException("Username already exists");
+      throw new BadRequestException("Пользователь с таким логином уже существует");
     }
 
     User user = new User();
@@ -56,16 +56,20 @@ public class UserService {
     user.setPassword(passwordEncoder.encode(userDTO.getPassword()));
     user.setEnabled(true);
 
-    if (userDTO.getRoleTitles() != null && !userDTO.getRoleTitles().isEmpty()) {
-      Set<Role> roles = userDTO.getRoleTitles().stream()
-        .map(roleTitle -> roleRepository.findByTitle(roleTitle)
-          .orElseThrow(() -> {
-            logger.error("Role not found: {}", roleTitle);
-            return new ResourceNotFoundException("Role not found: " + roleTitle);
-          }))
-        .collect(Collectors.toSet());
-      user.setRoles(roles);
+    if (userDTO.getRoleTitles() == null || userDTO.getRoleTitles().isEmpty()) {
+      throw new BadRequestException("Выберите одну роль");
     }
+    if (userDTO.getRoleTitles().size() != 1) {
+      throw new BadRequestException("Нужно указать ровно одну роль");
+    }
+    Set<Role> roles = userDTO.getRoleTitles().stream()
+      .map(roleTitle -> roleRepository.findByTitle(roleTitle)
+        .orElseThrow(() -> {
+          logger.error("Role not found: {}", roleTitle);
+          return new ResourceNotFoundException("Role not found: " + roleTitle);
+        }))
+      .collect(Collectors.toSet());
+    user.setRoles(roles);
 
     User saved = userRepository.save(user);
     logger.info("User created successfully with ID: {}", saved.getId());
@@ -128,7 +132,7 @@ public class UserService {
     if (userDTO.getUsername() != null && !userDTO.getUsername().equals(user.getUsername())) {
       if (userRepository.existsByUsername(userDTO.getUsername())) {
         logger.error("Username already exists: {}", userDTO.getUsername());
-        throw new BadRequestException("Username already exists");
+        throw new BadRequestException("Пользователь с таким логином уже существует");
       }
       user.setUsername(userDTO.getUsername());
     }
@@ -138,8 +142,14 @@ public class UserService {
       user.setPassword(passwordEncoder.encode(userDTO.getPassword()));
     }
     
-    // Обновляем роли
+    // Обновляем роли (ровно одна роль)
     if (userDTO.getRoleTitles() != null) {
+      if (userDTO.getRoleTitles().isEmpty()) {
+        throw new BadRequestException("Выберите одну роль");
+      }
+      if (userDTO.getRoleTitles().size() != 1) {
+        throw new BadRequestException("Нужно указать ровно одну роль");
+      }
       Set<Role> roles = userDTO.getRoleTitles().stream()
         .map(roleTitle -> roleRepository.findByTitle(roleTitle)
           .orElseThrow(() -> {
