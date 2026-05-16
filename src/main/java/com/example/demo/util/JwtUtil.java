@@ -17,7 +17,7 @@ public class JwtUtil {
     @Value("${jwt.secret:mySecretKey123456789012345678901234567890}") // Минимум 32 символа
     private String secret;
 
-    @Value("${jwt.access.expiration:3600000}") // 1 час в миллисекундах
+    @Value("${jwt.access.expiration:900000}") // 15 минут в миллисекундах
     private Long accessExpiration;
 
     // Refresh токен UUID — генерируется в AuthService через UUID.randomUUID()

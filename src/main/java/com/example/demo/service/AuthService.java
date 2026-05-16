@@ -70,7 +70,7 @@ public class AuthService {
             user
     ));
 
-    addCookie(response, "access_token",  accessTokenValue,  3600);   // 1 час
+    addCookie(response, "access_token",  accessTokenValue,  900);    // 15 минут
     addCookie(response, "refresh_token", refreshTokenValue, 604800); // 7 дней
 
     logger.info("User authenticated successfully: {}", loginRequest.getUsername());
@@ -110,7 +110,7 @@ public class AuthService {
             user
     ));
 
-    addCookie(response, "access_token",  newAccessToken,  3600);
+    addCookie(response, "access_token",  newAccessToken,  900);    // 15 минут
     addCookie(response, "refresh_token", newRefreshToken, 604800);
 
     logger.info("Tokens refreshed for user: {}", user.getUsername());
