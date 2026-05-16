@@ -8,7 +8,6 @@ import com.example.demo.dto.UserDTO;
 import com.example.demo.model.User;
 import com.example.demo.service.AuthService;
 import com.example.demo.service.UserService;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
@@ -45,20 +44,34 @@ public class AuthController {
   }
 
   @PostMapping("/login")
-  public ResponseEntity<LoginResponseDTO> login(@Valid @RequestBody LoginRequestDTO loginRequest,
-                                              HttpServletResponse response) {
+  public ResponseEntity<LoginResponseDTO> login(
+          @Valid @RequestBody LoginRequestDTO loginRequest,
+          HttpServletResponse response) {
     logger.info("Login attempt for username: {}", loginRequest.getUsername());
-    String token = authService.authenticate(loginRequest);
-
-    Cookie cookie = new Cookie("jwtToken", token);
-    cookie.setHttpOnly(true);
-    cookie.setSecure(false);
-    cookie.setPath("/");
-    cookie.setMaxAge(86400);
-    response.addCookie(cookie);
-
+    authService.authenticate(loginRequest, response); // куки ставятся внутри сервиса
     logger.info("User logged in successfully: {}", loginRequest.getUsername());
-    return ResponseEntity.ok(new LoginResponseDTO("Login successful", token));
+    return ResponseEntity.ok(new LoginResponseDTO("Login successful", null));
+  }
+
+  // Выдаёт новый access_token по refresh_token из куки
+  @PostMapping("/refresh")
+  public ResponseEntity<?> refresh(
+          @CookieValue(name = "refresh_token", required = false) String refreshToken,
+          HttpServletResponse response) {
+    if (refreshToken == null) {
+      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Refresh token not found");
+    }
+    authService.refresh(refreshToken, response);
+    return ResponseEntity.ok("Token refreshed");
+  }
+
+  // Выход — отзывает refresh token в БД и удаляет access token
+  @PostMapping("/logout")
+  public ResponseEntity<?> logout(
+          @CookieValue(name = "refresh_token", required = false) String refreshToken,
+          HttpServletResponse response) {
+    authService.logout(refreshToken, response);
+    return ResponseEntity.ok("Logged out");
   }
 
   @GetMapping("/me")

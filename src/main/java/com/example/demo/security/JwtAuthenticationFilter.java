@@ -19,22 +19,22 @@ import java.io.IOException;
 
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
-    
+
   @Autowired
   private JwtUtil jwtUtil;
-  
+
   @Autowired
   private UserDetailsServiceImpl userDetailsService;
-  
+
   @Override
-  protected void doFilterInternal(HttpServletRequest request, 
-                                 HttpServletResponse response, 
-                                 FilterChain filterChain) 
+  protected void doFilterInternal(HttpServletRequest request,
+                                  HttpServletResponse response,
+                                  FilterChain filterChain)
           throws ServletException, IOException {
-      
+
       String token = resolveToken(request);
       String username = null;
-      
+
       if (token != null) {
           try {
               username = jwtUtil.getUsernameFromToken(token);
@@ -42,34 +42,37 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
               logger.error("Cannot get username from token", e);
           }
       }
-      
+
       if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
           UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-          
+
+          // Проверка JWT подписи и срока жизни
           if (jwtUtil.validateToken(token, username)) {
-              UsernamePasswordAuthenticationToken authToken = 
+              UsernamePasswordAuthenticationToken authToken =
                   new UsernamePasswordAuthenticationToken(
-                      userDetails, 
-                      null, 
+                      userDetails,
+                      null,
                       userDetails.getAuthorities()
                   );
               authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
               SecurityContextHolder.getContext().setAuthentication(authToken);
           }
       }
-      
+
       filterChain.doFilter(request, response);
   }
-  
+
   private String resolveToken(HttpServletRequest request) {
+      // Поддерживаем Bearer заголовок для Swagger
       String bearer = request.getHeader("Authorization");
       if (bearer != null && bearer.startsWith("Bearer ")) {
           return bearer.substring(7).trim();
       }
+      // Основной способ — кука access_token
       Cookie[] cookies = request.getCookies();
       if (cookies != null) {
           for (Cookie cookie : cookies) {
-              if ("jwtToken".equals(cookie.getName())) {
+              if ("access_token".equals(cookie.getName())) {
                   return cookie.getValue();
               }
           }
